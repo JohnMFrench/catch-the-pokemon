@@ -66,6 +66,7 @@ def main() -> None:
         "bg-ground": ROOT / "assets" / "background.jpg",
         "bg-rocky": ROOT / "assets" / "rocky-hill-16x9.jpg",
         "bg-sea": ROOT / "assets" / "blue-sea-16x9.jpg",
+        "bg-dark": ROOT / "assets" / "dark-path-16x9.jpg",
     }
     for key, path in bgs.items():
         if path.exists():

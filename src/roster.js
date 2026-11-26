@@ -195,17 +195,49 @@ window.ROSTER = [
     dex: "Umbreon's rings glow when it is ready to fight, and it hunts without making a sound.",
     real: "Under ultraviolet light, scorpions glow blue-green and so does the fur of many ordinary mammals. You just cannot see it with your eyes." },
 
+  { id: 198, name: 'Murkrow', types: ['Dark', 'Flying'], h: 0.5, w: 2.1,
+    dex: "It steals anything shiny and hides it in its nest.",
+    real: "Crows and ravens can recognise individual human faces and remember them for years." },
+
   { id: 212, name: 'Scizor', types: ['Bug', 'Steel'], h: 1.8, w: 118.0,
     dex: "Its steel claws are so sharp that Scizor can cut a tree trunk in half without slowing down.",
     real: "Spider silk is stronger than steel of the same thickness and stretchier than rubber - weight for weight it is one of the toughest materials known." },
+
+  { id: 215, name: 'Sneasel', types: ['Dark', 'Ice'], h: 0.9, w: 28.0,
+    dex: "It slips through the dark on silent feet and steals eggs from nests.",
+    real: "Owls fly silently because the front edge of each feather has a soft comb that breaks up the sound of the air." },
+
+  { id: 228, name: 'Houndour', types: ['Dark', 'Fire'], h: 0.6, w: 10.8,
+    dex: "It hunts in a pack and barks to tell the others exactly where it is.",
+    real: "A dog's nose has about 300 million scent receptors. Ours has roughly 6 million." },
+
+  { id: 229, name: 'Houndoom', types: ['Dark', 'Fire'], h: 1.4, w: 35.0,
+    dex: "The burn from its flame hurts for as long as the flame would have burned.",
+    real: "Fireflies make their own light: a chemical reaction inside them gives off light but almost no heat." },
+
+  { id: 248, name: 'Tyranitar', types: ['Rock', 'Dark'], h: 2.0, w: 202.0,
+    dex: "Its hide is so tough that nothing can scratch it, so it walks wherever it likes.",
+    real: "Crocodile skin is armour: bony plates called osteoderms sit inside it, which is why it is so hard to bite through." },
 
   { id: 258, name: 'Mudkip', types: ['Water'], h: 0.4, w: 7.6,
     dex: "Mudkip can shove a boulder aside with its fin, and it naps in the mud when nobody is looking.",
     real: "Axolotls are real animals that can regrow a lost leg - bone, muscle and skin - in about two months." },
 
+  { id: 261, name: 'Poochyena', types: ['Dark'], h: 0.5, w: 13.6,
+    dex: "It bites anything that moves and follows it until it gives up.",
+    real: "Puppies explore with their mouths because they have far fewer taste buds than adult dogs." },
+
+  { id: 262, name: 'Mightyena', types: ['Dark'], h: 1.0, w: 37.0,
+    dex: "It lives in a pack and never abandons a chase once it has started.",
+    real: "A wolf pack wins by endurance, not speed: wolves can trot all day at walking pace." },
+
   { id: 321, name: 'Wailord', types: ['Water'], h: 14.5, w: 398.0,
     dex: "Wailord is the biggest Pokémon of all, and when it leaps the splash can be seen for miles.",
     real: "The blue whale is the largest animal that has ever lived: 30 metres long and heavier than any dinosaur we have found." },
+
+  { id: 359, name: 'Absol', types: ['Dark'], h: 1.2, w: 47.0,
+    dex: "It appears just before a disaster, trying to warn the people nearby.",
+    real: "Animals often sense an earthquake before we do: they feel the fast, tiny waves that arrive ahead of the shaking." },
 
   { id: 384, name: 'Rayquaza', types: ['Dragon', 'Flying'], h: 7.0, w: 206.5,
     dex: "Rayquaza lives above the clouds and only comes down when two other legendary Pokémon start a fight.",
@@ -218,6 +250,18 @@ window.ROSTER = [
   { id: 448, name: 'Lucario', types: ['Fighting', 'Steel'], h: 1.2, w: 54.0,
     dex: "Lucario reads the aura of living things, so it knows exactly where you are even with its eyes shut.",
     real: "Bats find their way in total darkness by shouting and listening for the echo. It is called echolocation." },
+
+  { id: 491, name: 'Darkrai', types: ['Dark'], h: 1.5, w: 50.5,
+    dex: "It gives people nightmares, but only to keep them away from it.",
+    real: "A nightmare happens in REM sleep — the stage when your brain is as busy as when you are awake." },
+
+  { id: 570, name: 'Zorua', types: ['Dark'], h: 0.7, w: 12.5,
+    dex: "It tricks people by taking the shape of someone they trust.",
+    real: "Cuttlefish change colour and shape to look like a rock, seaweed, or another animal entirely." },
+
+  { id: 571, name: 'Zoroark', types: ['Dark'], h: 1.6, w: 81.1,
+    dex: "It weaves illusions that fool a whole crowd at once.",
+    real: "A mirage is real light bending through layers of air at different temperatures — your eyes are not lying." },
 
   { id: 658, name: 'Greninja', types: ['Water', 'Dark'], h: 1.5, w: 40.0,
     dex: "Greninja moves so fast it seems to vanish, and it folds water into throwing stars.",

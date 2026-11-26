@@ -28,6 +28,7 @@ STATIC = [
     "assets/background.jpg",
     "assets/rocky-hill-16x9.jpg",
     "assets/blue-sea-16x9.jpg",
+    "assets/dark-path-16x9.jpg",
     "assets/player.png",
     "assets/janbob_name.png",
 ]

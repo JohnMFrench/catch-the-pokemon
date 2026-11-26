@@ -50,8 +50,39 @@ CROP_TOP_ALIGNED = True  # 16:9 crop keeps the sky/clouds, trims the bottom of t
 
 
 # --------------------------------------------------------------- geometry
-def find_sheet(img):
-    """Return the four corners of the paper (TL, TR, BR, BL) in full-res pixels."""
+def find_sheet(img, min_area=0.45):
+    """Return the four corners of the paper (TL, TR, BR, BL) in full-res pixels.
+
+    The connected-component pass looks for the biggest run of bright paper. On a
+    drawing this dark that can latch onto one white gap *between* crayon strokes,
+    which rectifies into a zoomed patch of the middle of the picture. When the
+    quad it returns covers less than `min_area` of the frame, fall back to the
+    bounding box of all paper-coloured pixels - the sheet is the only pale thing
+    on a wooden table, so its extent is reliable even when it is not connected.
+    """
+    quad = _find_sheet_component(img)
+    area = abs((quad[1, 0] - quad[0, 0]) * (quad[3, 1] - quad[0, 1])) / (img.shape[0] * img.shape[1])
+    if area >= min_area:
+        return quad
+    bbox = _find_sheet_bbox(img)
+    print("  sheet detection: component covered only %.0f%% of the frame -> "
+          "using the paper bounding box instead" % (100 * area))
+    return bbox
+
+
+def _find_sheet_bbox(img):
+    H, W = img.shape[:2]
+    s = 2000.0 / max(H, W)
+    small = cv2.resize(img, (int(round(W * s)), int(round(H * s))), interpolation=cv2.INTER_AREA)
+    g = cv2.cvtColor(small, cv2.COLOR_BGR2GRAY)
+    ys, xs = np.nonzero(g > 120)
+    x0, x1 = np.percentile(xs, [1, 99])
+    y0, y1 = np.percentile(ys, [1, 99])
+    quad = np.array([[x0, y0], [x1, y0], [x1, y1], [x0, y1]], np.float32)
+    return quad / s
+
+
+def _find_sheet_component(img):
     H, W = img.shape[:2]
     s = 2000.0 / W
     small = cv2.resize(img, (2000, int(round(H * s))), interpolation=cv2.INTER_AREA)
@@ -150,6 +181,10 @@ def main():
     # --src/--out16 at another sheet to get just its 16:9 backdrop.
     ap.add_argument("--src", default=SRC, help="photo of the drawing (default: the meadow)")
     ap.add_argument("--out16", metavar="PATH", help="write only this 16:9 file")
+    ap.add_argument("--rotate", type=int, default=0, choices=[0, 90, 180, 270],
+                    help="rotate the photo clockwise before anything else (default 0). "
+                         "Needed when the phone stored the sensor frame and set only an "
+                         "EXIF orientation tag: the sheet then rectifies sideways.")
     ap.add_argument("--bias", type=float, default=0.0,
                     help="fraction of the 16:9 crop's lost height taken from the TOP "
                          "(0 = keep the sky, 1 = keep the ground)")
@@ -160,6 +195,11 @@ def main():
     # PIL on purpose: cv2.imread() honours this file's EXIF orientation tag (6) and
     # would rotate it a quarter turn. The stored pixels are already upright.
     img = cv2.cvtColor(np.asarray(Image.open(src).convert("RGB")), cv2.COLOR_RGB2BGR)
+    if args.rotate:
+        img = cv2.rotate(img, {90: cv2.ROTATE_90_CLOCKWISE,
+                               180: cv2.ROTATE_180,
+                               270: cv2.ROTATE_90_COUNTERCLOCKWISE}[args.rotate])
+        print("rotated %d deg clockwise" % args.rotate)
     print("source %dx%d" % (img.shape[1], img.shape[0]))
 
     quad = find_sheet(img)

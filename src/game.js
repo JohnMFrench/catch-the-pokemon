@@ -13,6 +13,7 @@
   const CFG = {
     roundSeconds: 120,     // length of one round
     pointsPerCatch: 100,   // score for a sling throw that lands
+    nicePoints: 150,       // sling throw whose aim ring sits on the Pokémon
     tapPoints: 25,         // tapping a Pokémon throws for you, for less
     maxOnScreen: 4,        // how many Pokémon are loose at once
     spawnDelay: 900,       // ms between spawns
@@ -86,9 +87,13 @@
     rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'],
               bg: 'bg-rocky',  field: { top: 226, bottom: 366 } },
     sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'],
-              bg: 'bg-sea',    field: { top: 234, bottom: 364 } }
+              bg: 'bg-sea',    field: { top: 234, bottom: 364 } },
+    // The dark path sheet is portrait, so the crop takes a horizontal band across
+    // it: trees at the top, the path from 45% down. The band sits on the path.
+    dark:   { name: 'Dark Path',    blurb: 'Dark Pokémon',                             types: ['Dark'],
+              bg: 'bg-dark',   field: { top: 350, bottom: 520 } }
   };
-  const MAP_ORDER = ['ground', 'rocky', 'sea'];   // picker order
+  const MAP_ORDER = ['ground', 'rocky', 'sea', 'dark'];   // picker order
 
   // A Pokémon lives on every map whose types it has, so a dual type is at home
   // in both: Gyarados (Water/Flying) is a sea creature AND a sky one, Aerodactyl
@@ -416,6 +421,7 @@
       this.load.image('bg-ground', inline['bg-ground'] || 'assets/background.jpg');
       this.load.image('bg-rocky', inline['bg-rocky'] || 'assets/rocky-hill-16x9.jpg');
       this.load.image('bg-sea', inline['bg-sea'] || 'assets/blue-sea-16x9.jpg');
+      this.load.image('bg-dark', inline['bg-dark'] || 'assets/dark-path-16x9.jpg');
       Object.keys(BALLS).forEach((name) => {
         this.load.image('ball-' + name, inline['ball-' + name] || ('assets/balls/' + name + '.png'));
       });
@@ -497,7 +503,7 @@
       const bx = W * 0.42;
 
       // ---- which map the round is played on, picked before it starts
-      const chipY = 292, chipW = 140, chipH = 46, gap = 10;
+      const chipY = 292, chipW = 150, chipH = 46, gap = 8;
       const total = MAP_ORDER.length * chipW + (MAP_ORDER.length - 1) * gap;
       const blurb = label(this, bx, 340, MAPS[chosen].blurb, 16, C.ink, true)
         .setStroke(C.white, 5).setAlpha(0.85);
@@ -569,9 +575,11 @@
         "1.  Press the ball in Janbob's hand",
         '2.  Drag DOWN and let go to aim',
         '3.  Hit a Pokémon to catch it!',
-        '4.  Red dots mean too hard - that throw bounces off!',
+        '4.  Ring on the Pokémon goes GREEN? That is a nice throw!',
+        '5.  Red dots mean too hard - that throw bounces off!',
         '',
-        'Sling throw +' + CFG.pointsPerCatch + '   ·   just tapping +' + CFG.tapPoints + ' points.',
+        'Nice throw +' + CFG.nicePoints + '  ·  sling +' + CFG.pointsPerCatch +
+          '  ·  tapping +' + CFG.tapPoints,
         'You have ' + CFG.roundSeconds + ' seconds.'
       ];
       steps.forEach((s, i) => {
@@ -995,6 +1003,25 @@
       return { dx: dx, dy: dy, len: len, nx: dx / (Math.hypot(dx, dy) || 1), ny: dy / (Math.hypot(dx, dy) || 1) };
     }
 
+    // Simulate the arc for this pull. Shared by the aim dots and by the score,
+    // so what the player is shown and what they are paid can never disagree.
+    traceArc(pull) {
+      let vx = pull.nx * pull.len * CFG.launchK;
+      let vy = pull.ny * pull.len * CFG.launchK;
+      let x = CFG.launcher.x;
+      let y = CFG.launcher.y;
+      const dt = 1 / 60;
+      const pts = [];
+      for (let i = 0; i < 90; i++) {
+        vy += CFG.gravity * dt;
+        x += vx * dt;
+        y += vy * dt;
+        pts.push({ x: x, y: y, i: i });
+        if (y > H + 40 || x < -60 || x > W + 60) break;
+      }
+      return { pts: pts, x: x, y: y };
+    }
+
     // The cheapest arc that lands on a Pokémon: the same solve the aim dots
     // use, picked to arrive with the least speed (so it never bounces).
     aimPointFor(pk) {
@@ -1045,7 +1072,12 @@
       this.ballState = 'flying';
       this.ball.setScale(this.ballScale);
       this.throwKind = kind || 'sling';
-      this.throwScore = this.throwKind === 'tap' ? CFG.tapPoints : CFG.pointsPerCatch;
+      // Nice throw: decided at release from the same arc the aim ring showed,
+      // so the green ring is a promise, not a hint.
+      const arc = this.traceArc(pull);
+      this.throwNice = this.throwKind === 'sling' && !!this.pokemonUnder(arc.x, arc.y);
+      this.throwScore = this.throwKind === 'tap' ? CFG.tapPoints
+        : (this.throwNice ? CFG.nicePoints : CFG.pointsPerCatch);
       this.thrownSpeed = pull.len * CFG.launchK;
       this.bounces = 0;
       this.ballHits.clear();
@@ -1092,29 +1124,34 @@
       // dots turn red once the throw is hot enough to bounce, so the limit is
       // visible before letting go.
       const hot = pull.len * CFG.launchK >= CFG.bounceSpeed;
-      let vx = pull.nx * pull.len * CFG.launchK;
-      let vy = pull.ny * pull.len * CFG.launchK;
-      let x = CFG.launcher.x;
-      let y = CFG.launcher.y;
-      const dt = 1 / 60;
-      for (let i = 0; i < 90; i++) {
-        vy += CFG.gravity * dt;
-        x += vx * dt;
-        y += vy * dt;
-        if (i % 6 === 0) {
-          const t = 1 - i / 100;
-          const r = 4.5 + t * 4;
-          g.fillStyle(0x22333d, 0.35 + t * 0.25);
-          g.fillCircle(x, y, r + 2.5);
-          g.fillStyle(hot ? 0xe4572e : 0xffffff, 0.55 + t * 0.4);
-          g.fillCircle(x, y, r);
-        }
-        if (y > H + 40 || x < -60 || x > W + 60) break;
+      const arc = this.traceArc(pull);
+      arc.pts.forEach((pt) => {
+        if (pt.i % 6 !== 0) return;
+        const t = 1 - pt.i / 100;
+        const r = 4.5 + t * 4;
+        g.fillStyle(0x22333d, 0.35 + t * 0.25);
+        g.fillCircle(pt.x, pt.y, r + 2.5);
+        g.fillStyle(hot ? 0xe4572e : 0xffffff, 0.55 + t * 0.4);
+        g.fillCircle(pt.x, pt.y, r);
+      });
+
+      // The tracking ring sits where the ball will land. Line it up on a
+      // Pokémon and it goes green: that throw is worth a nice-throw bonus.
+      const lx = arc.x, ly = arc.y;
+      this.aimNice = !!this.pokemonUnder(lx, ly);
+      if (this.aimNice) {
+        g.lineStyle(3, 0x3ddc84, 0.45);
+        g.strokeCircle(lx, ly, 27);
+        g.lineStyle(5, 0x2fbf5f, 0.95);
+        g.strokeCircle(lx, ly, 17);
+        g.lineStyle(2, 0x14532d, 0.55);
+        g.strokeCircle(lx, ly, 21);
+      } else {
+        g.lineStyle(4, 0xffffff, 0.85);
+        g.strokeCircle(lx, ly, 16);
+        g.lineStyle(2, 0x22333d, 0.5);
+        g.strokeCircle(lx, ly, 19);
       }
-      g.lineStyle(4, 0xffffff, 0.85);
-      g.strokeCircle(x, y, 16);
-      g.lineStyle(2, 0x22333d, 0.5);
-      g.strokeCircle(x, y, 19);
       this.ball.setAngle(0);
     }
 
@@ -1374,13 +1411,23 @@
         onComplete: () => ring.destroy()
       });
 
-      // +points
-      const pop = label(this, x, y - 40, '+' + this.throwScore, 44, C.yellow, true)
+      // +points, gold for a normal catch and green for a nice throw
+      const pop = label(this, x, y - 40, '+' + this.throwScore, 44,
+                        this.throwNice ? 0x3ddc84 : C.yellow, true)
         .setStroke(C.ink, 7).setDepth(37);
       this.tweens.add({
         targets: pop, y: y - 120, alpha: 0, duration: 850, ease: 'Quad.out',
         onComplete: () => pop.destroy()
       });
+
+      if (this.throwNice) {
+        const nice = label(this, x, y - 62, 'NICE THROW!', 30, 0x3ddc84, true)
+          .setStroke(C.ink, 6).setDepth(38);
+        this.tweens.add({
+          targets: nice, y: y - 150, alpha: 0, duration: 1000, ease: 'Quad.out',
+          onComplete: () => nice.destroy()
+        });
+      }
 
       if (isNew) {
         const tag = label(this, x, y - 100, 'NEW!', 32, C.white, true)

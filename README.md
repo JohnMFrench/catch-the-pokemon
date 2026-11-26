@@ -61,9 +61,10 @@ forget). The Fullscreen button is bottom-right.
 |---|---|
 | Round length | 120 seconds |
 | Sling throw that lands | +100 |
+| **Nice throw** — the aim ring is green (lined up on a Pokémon's hitbox) | **+150** |
 | Tap a Pokémon (auto-aim) | +25 |
 | Pokémon on screen | up to 4, standing still |
-| Pokédex | 63 species to find; caught ones stay caught |
+| Pokédex | 74 species to find; caught ones stay caught |
 | High scores | top 10, saved in the browser (`localStorage`), with a name — every run is its own row, so the same player can appear more than once |
 | New record | beating the best score on the board banners the results card with the old number |
 
@@ -81,7 +82,7 @@ Score and Pokédex are per-browser-profile. Nothing leaves the machine.
     assets/janbob_name.png  the handwritten name off the same sheet (menu only)
     assets/balls/<colour>.png  the three hand-drawn balls (320px, alpha), cut from
                             assets/custom/img/pokeballs.jpg by tools/build_balls.py
-    assets/pokemon/<id>.png 63 sprites, 320px, from the PokeAPI sprites repo
+    assets/pokemon/<id>.png 74 sprites, 320px, from the PokeAPI sprites repo
     assets/fonts/Fredoka.ttf  chunky rounded UI font (SIL Open Font License)
     vendor/phaser.min.js    Phaser 3.90
     tools/build_standalone.py  inlines everything -> dist/pokecatch.html (offline)
@@ -174,8 +175,9 @@ Picked on the menu before the round starts; the choice is remembered in
 map's creature pool. The map name sits in the HUD under the score.
 
     Ground & Sky   40 species — normal and flying, plus whatever no other map claims
-    Rocky Hill     12 species — rock and ground, Onix through Aerodactyl
+    Rocky Hill     13 species — rock and ground, Onix through Aerodactyl
     Blue Sea       15 species — water, Squirtle through Quaxly
+    Dark Path      13 species — dark, Umbreon through Zoroark
 
 A species belongs to **every** map whose types it has, decided by
 `mapsForTypes()` in `src/game.js`. A dual type is therefore at home in both: a
@@ -191,10 +193,21 @@ the paper out of the photo, white-balances on the unpainted paper, and crops to
 
     python3 tools/build_bg.py --src assets/rocky-hill.jpg --out16 assets/rocky-hill-16x9.jpg --bias 0.2
     python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 1.0
+    python3 tools/build_bg.py --src assets/dark-path.jpg  --out16 assets/dark-path-16x9.jpg  --bias 0.5 --rotate 270
 
 `--bias` is how much of the crop's lost height comes off the top: 0 keeps all the
 sky, 1 keeps all the ground. Both drawings are roughly 1.1–1.3:1 against a 1.78:1
 canvas, so about a quarter of the height has to go somewhere.
+
+**Dark Path is a portrait sheet**, so its 16:9 band is cut from the middle of a
+0.76:1 drawing — a horizontal slice, not a top/bottom crop. Two things were
+needed for it: `--rotate 270`, because the phone stored the sensor frame and left
+only an EXIF tag saying which way is up (the file rectified sideways without it),
+and a detection fallback, because on a drawing this dark the biggest run of
+bright paper is a white gap *between* crayon strokes, not the sheet. When the
+detected quad covers under 45% of the frame the tool now falls back to the
+bounding box of every paper-coloured pixel. Its bias is 0.50: tree line across
+the top, path through the middle, dark foreground at the bottom.
 
 The hill runs at 0.2: sun, peak and rocky ground all survive. The sea runs at
 **1.0**, bottom-aligned, because anything less sliced the tops off the waves —
@@ -206,7 +219,8 @@ re-check them if a sheet is redrawn.
 
 Because the drawings put their ground at different heights, the band Pokémon
 spawn in belongs to the map (`field:` in `MAPS`), not to one global value:
-294–430 on the meadow, 226–366 on the hill, 234–364 on the sea. The two new maps
+294–430 on the meadow, 226–366 on the hill, 234–364 on the sea, 350–520 on the dark
+path. The two new maps
 sit deliberately high — "up towards the top of the screen", not "standing on the
 horizon" — so the horizon line is not a constraint on where they appear.
 
