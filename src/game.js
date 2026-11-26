@@ -88,8 +88,9 @@
               bg: 'bg-rocky',  field: { top: 226, bottom: 366 } },
     sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'],
               bg: 'bg-sea',    field: { top: 234, bottom: 364 } },
-    // The dark path sheet is portrait, so the crop takes a horizontal band across
-    // it: trees at the top, the path from 45% down. The band sits on the path.
+    // The dark path sheet is landscape with the path drawn down the middle, so
+    // the 16:9 crop keeps the full width and takes its loss off top and bottom.
+    // The band sits low on that path, in front of the tree line.
     dark:   { name: 'Dark Path',    blurb: 'Dark Pokémon',                             types: ['Dark'],
               bg: 'bg-dark',   field: { top: 350, bottom: 520 } }
   };

@@ -57,17 +57,113 @@ def find_sheet(img, min_area=0.45):
     drawing this dark that can latch onto one white gap *between* crayon strokes,
     which rectifies into a zoomed patch of the middle of the picture. When the
     quad it returns covers less than `min_area` of the frame, fall back to the
-    bounding box of all paper-coloured pixels - the sheet is the only pale thing
-    on a wooden table, so its extent is reliable even when it is not connected.
+    paper's four edges, fitted as lines (see _find_sheet_by_edges). A plain
+    bounding box is the last resort: it cannot follow a sheet the phone shot at a
+    slight angle, so it keeps a sliver of table on one side and shaves paper off
+    the other.
     """
     quad = _find_sheet_component(img)
     area = abs((quad[1, 0] - quad[0, 0]) * (quad[3, 1] - quad[0, 1])) / (img.shape[0] * img.shape[1])
     if area >= min_area:
         return quad
-    bbox = _find_sheet_bbox(img)
+    edges = _find_sheet_by_edges(img)
+    if edges is not None:
+        print("  sheet detection: component covered only %.0f%% of the frame -> "
+              "fitting the paper's four edges instead" % (100 * area))
+        return edges
     print("  sheet detection: component covered only %.0f%% of the frame -> "
           "using the paper bounding box instead" % (100 * area))
-    return bbox
+    return _find_sheet_bbox(img)
+
+
+def _paper_mask(img, l_min=150.0, chroma_max=22.0):
+    """Pale, neutral pixels at 2000 px wide: the sheet, not the wooden table."""
+    s = 2000.0 / img.shape[1]
+    small = cv2.resize(img, (2000, int(round(img.shape[0] * s))), interpolation=cv2.INTER_AREA)
+    lab = cv2.cvtColor(small, cv2.COLOR_BGR2LAB)
+    L = lab[:, :, 0].astype(np.float32)
+    a = lab[:, :, 1].astype(np.float32) - 128
+    b = lab[:, :, 2].astype(np.float32) - 128
+    m = ((L > l_min) & (np.hypot(a, b) < chroma_max)).astype(np.uint8)
+    m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, np.ones((9, 9), np.uint8))
+    return m, s
+
+
+def _robust_line(u, v, iters=4):
+    """Least-squares v = a*u + b, refitted on the inliers a few times."""
+    keep = np.ones(len(u), bool)
+    a, b = np.polyfit(u, v, 1)
+    for _ in range(iters):
+        r = v - (a * u + b)
+        med = np.median(r[keep])
+        mad = np.median(np.abs(r[keep] - med)) + 1e-6
+        keep = np.abs(r - med) < 3.0 * mad
+        if keep.sum() < 20:
+            break
+        a, b = np.polyfit(u[keep], v[keep], 1)
+    return float(a), float(b), keep
+
+
+def _find_sheet_by_edges(img):
+    """Four corners from line fits to the sheet's own top/bottom/left/right edges.
+
+    On a dark drawing the paper is a disconnected scatter of white gaps, so there
+    is no single blob to take a quadrilateral from - but every one of those gaps
+    stops at the sheet's edge, so the outermost pale pixel per row and per column
+    traces the four edges exactly. Each edge is fitted as a line (robustly, so a
+    bright reflection on the table cannot drag it) and the corners are where
+    neighbouring lines cross. This keeps the photographed keystone: a sheet shot
+    slightly off-square is wider at one end, and only a real quadrilateral fits it
+    without also including the table.
+    """
+    m, s = _paper_mask(img)
+    H, W = m.shape
+    ys, xs = np.nonzero(m)
+    if len(xs) < 500:
+        return None
+    x0, x1 = np.percentile(xs, [0.5, 99.5])
+    y0, y1 = np.percentile(ys, [0.5, 99.5])
+
+    top = np.full(W, -1, np.int32); bot = np.full(W, -1, np.int32)
+    for x in range(int(x0), int(x1) + 1):
+        col = np.nonzero(m[:, x])[0]
+        if len(col):
+            top[x], bot[x] = col[0], col[-1]
+    left = np.full(H, -1, np.int32); right = np.full(H, -1, np.int32)
+    for y in range(int(y0), int(y1) + 1):
+        row = np.nonzero(m[y, :])[0]
+        if len(row):
+            left[y], right[y] = row[0], row[-1]
+
+    # central 80% only: the corners themselves are the noisiest pixels
+    cx = np.arange(int(x0 + 0.1 * (x1 - x0)), int(x1 - 0.1 * (x1 - x0)))
+    cx = cx[(top[cx] >= 0) & (bot[cx] >= 0)]
+    cy = np.arange(int(y0 + 0.1 * (y1 - y0)), int(y1 - 0.1 * (y1 - y0)))
+    cy = cy[(left[cy] >= 0) & (right[cy] >= 0)]
+    if len(cx) < 50 or len(cy) < 50:
+        return None
+
+    ta, tb, _ = _robust_line(cx.astype(np.float64), top[cx].astype(np.float64))
+    ba, bb, _ = _robust_line(cx.astype(np.float64), bot[cx].astype(np.float64))
+    la, lb, _ = _robust_line(cy.astype(np.float64), left[cy].astype(np.float64))
+    ra, rb, _ = _robust_line(cy.astype(np.float64), right[cy].astype(np.float64))
+    # every sheet this tool sees is within a few degrees of square; anything else
+    # is a fit that latched onto strokes instead of paper
+    if any(abs(a) > 0.5 for a in (ta, ba, la, ra)):
+        return None
+
+    def cross(side_a, side_b, horiz_a, horiz_b):
+        # side: x = a*y + b   horizontal edge: y = a*x + b
+        x = (side_a * horiz_b + side_b) / (1.0 - side_a * horiz_a)
+        return (x, horiz_a * x + horiz_b)
+
+    quad = np.array([cross(la, lb, ta, tb), cross(ra, rb, ta, tb),
+                     cross(ra, rb, ba, bb), cross(la, lb, ba, bb)], np.float32) / s
+    w = 0.5 * (np.linalg.norm(quad[1] - quad[0]) + np.linalg.norm(quad[2] - quad[3]))
+    h = 0.5 * (np.linalg.norm(quad[3] - quad[0]) + np.linalg.norm(quad[2] - quad[1]))
+    if not (0.25 < w / h < 4.0):                      # nonsense quad, keep the bbox
+        return None
+    return quad
 
 
 def _find_sheet_bbox(img):

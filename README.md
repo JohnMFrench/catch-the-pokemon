@@ -211,21 +211,33 @@ the paper out of the photo, white-balances on the unpainted paper, and crops to
 
     python3 tools/build_bg.py --src assets/rocky-hill.jpg --out16 assets/rocky-hill-16x9.jpg --bias 0.2
     python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 1.0
-    python3 tools/build_bg.py --src assets/dark-path.jpg  --out16 assets/dark-path-16x9.jpg  --bias 0.5 --rotate 270
+    python3 tools/build_bg.py --src assets/dark-path.jpg  --out16 assets/dark-path-16x9.jpg  --bias 0.40
 
 `--bias` is how much of the crop's lost height comes off the top: 0 keeps all the
-sky, 1 keeps all the ground. Both drawings are roughly 1.1–1.3:1 against a 1.78:1
+sky, 1 keeps all the ground. Every sheet is roughly 1.1–1.3:1 against a 1.78:1
 canvas, so about a quarter of the height has to go somewhere.
 
-**Dark Path is a portrait sheet**, so its 16:9 band is cut from the middle of a
-0.76:1 drawing — a horizontal slice, not a top/bottom crop. Two things were
-needed for it: `--rotate 270`, because the phone stored the sensor frame and left
-only an EXIF tag saying which way is up (the file rectified sideways without it),
-and a detection fallback, because on a drawing this dark the biggest run of
-bright paper is a white gap *between* crayon strokes, not the sheet. When the
-detected quad covers under 45% of the frame the tool now falls back to the
-bounding box of every paper-coloured pixel. Its bias is 0.50: tree line across
-the top, path through the middle, dark foreground at the bottom.
+**Dark Path is drawn the other way round from the meadow**: a landscape sheet with
+the brown path running top to bottom through the middle and the black scribble and
+trees on either side. That is the way it was photographed as well, so it takes
+**no `--rotate`** — the stored pixels are already upright. The file does carry an
+EXIF orientation tag of 6, which would turn it a quarter turn; the tool reads
+pixels through PIL rather than `cv2.imread` for exactly this reason. If a sheet
+ever really does need turning, the fix is `--rotate`, never trusting the tag.
+
+Because the path runs vertically the crop cannot take a band across it: it keeps
+the full width and gives up 26% of the height, 0.40 of that from the top. Both
+tree crowns and the top of the path survive; what goes is the bottom of the
+foreground forest.
+
+That sheet also needed a detection fallback. On a drawing this dark the biggest
+run of bright paper is a white gap *between* crayon strokes, not the sheet — the
+component pass finds only 33% of the frame, under the 45% threshold. The fallback
+walks the outermost pale pixel of every row and every column, fits a robust line
+to each of the four edges, and takes the corners where neighbouring lines cross.
+It exists because the earlier plain bounding box could not follow the sheet's
+photographed keystone (wider at the bottom): it left a strip of the wooden table
+down the left edge and shaved about 100 px off the bottom of the drawing.
 
 The hill runs at 0.2: sun, peak and rocky ground all survive. The sea runs at
 **1.0**, bottom-aligned, because anything less sliced the tops off the waves —
@@ -240,7 +252,9 @@ spawn in belongs to the map (`field:` in `MAPS`), not to one global value:
 294–430 on the meadow, 226–366 on the hill, 234–364 on the sea, 350–520 on the dark
 path. The two new maps
 sit deliberately high — "up towards the top of the screen", not "standing on the
-horizon" — so the horizon line is not a constraint on where they appear.
+horizon" — so the horizon line is not a constraint on where they appear. The dark
+path is the exception: its band stayed where it was when the backdrop was
+re-oriented, and now sits low on the path in front of the tree line.
 
 Grey rock creatures on a grey mountain vanished into the art, so every Pokémon
 now gets a cream glow outline (Phaser FX, WebGL) plus a soft halo behind it (the

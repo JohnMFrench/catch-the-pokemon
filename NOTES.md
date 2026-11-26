@@ -44,25 +44,30 @@ horizon):
     ground 294-430    rocky 226-366    sea 234-364    dark 350-520
 
 Measured art landmarks (frame fractions, for future band work):
-sea waterline 42.9%, sea waves from ~79%, dark path from ~45%, hill slope from
-~28%.
+sea waterline 42.9%, sea waves from ~79%, hill slope from
+~28%; dark path spans x 24-57% full height, tree crowns down to ~45%,
+foreground forest from ~50%.
 
 ## Art pipeline
 
     python3 tools/build_bg.py --src assets/rocky-hill.jpg --out16 assets/rocky-hill-16x9.jpg --bias 0.2
     python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 1.0
-    python3 tools/build_bg.py --src assets/dark-path.jpg  --out16 assets/dark-path-16x9.jpg  --bias 0.5 --rotate 270
+    python3 tools/build_bg.py --src assets/dark-path.jpg  --out16 assets/dark-path-16x9.jpg  --bias 0.40
 
 `--bias` = how much of the crop's lost height comes off the TOP (0 keeps sky, 1
 keeps ground). `--rotate` exists because phones store the sensor frame and only
 set an EXIF tag; PIL is used on purpose so the stored pixels are not
 auto-rotated. The sea at 1.0 keeps the waves and gives up the sun; that was a
-deliberate trade, and the dark path at 270 is the orientation the drawing was
-actually in (judge it by whether the branches grow up from the ground).
+deliberate trade. The dark path takes **no** rotation: the sheet was drawn and
+photographed with the path vertical, its EXIF orientation tag (6) is wrong for
+this file, and the 0.40 bias keeps both tree crowns and drops the bottom of the
+forest. Judge a sheet by what the child drew: branches grow up from the ground,
+the path leaves the bottom edge.
 
-Sheet detection falls back to the paper-coloured bounding box when the biggest
-bright component covers under 45% of the frame - dark drawings otherwise
-rectify into a zoomed patch of themselves.
+Sheet detection falls back to a four-edge line fit when the biggest bright
+component covers under 45% of the frame, then to the paper-coloured bounding box
+if that fails. The line fit is what a dark drawing needs: a bounding box cannot
+follow the photographed keystone (wider at the bottom) and drags in table.
 
 ## Deploy and verify
 
