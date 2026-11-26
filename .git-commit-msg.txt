@@ -1,15 +1,17 @@
-Ten more Pokémon, all from the first 150
+Three maps, chosen before the round
 
-Venusaur (3), Blastoise (9), Raichu (26), Vulpix (37), Arcanine (59),
-Alakazam (65), Machamp (68), Scyther (123), Ditto (132), Zapdos (145).
-52 species total, inserted in National Dex order so both the spawn pool and the
-dex grid keep generation order.
+Ground & Sky (default), Rocky Hill and Blue Sea. The picker sits on the menu
+above PLAY: three chips, the chosen one lit, with a line under it naming what
+lives there. The choice is remembered in localStorage and passed to GameScene,
+which builds its spawn pool from that map only. The map name shows in the HUD.
 
-Each has the same two facts as the rest: one in-world line and one real-world
-science line (trees pulling water up, hose pressure, lightning rods, foxes and
-magnetism, greyhound overheating, 86 billion neurons, paired muscles, mantis
-shrimp cavitation, cuttlefish skin, lightning temperature). Types, height and
-weight pulled from PokeAPI into tools/dexdata.json.
+Species are assigned by type in mapForTypes(), checked sea -> hill -> default,
+so a Water/Flying Pokémon is a sea creature and the default map catches
+everything else. That keeps the Pokédex fillable: 38 ground, 13 sea, 7 rocky.
 
-The dex grid now uses 10 columns above 48 species instead of squeezing 8 into a
-microscopic 7-row grid.
+Rocky Hill only had Onix, so it also gets Sandshrew, Diglett, Geodude, Graveler,
+Golem and Cubone (all Gen 1) with the usual two facts each. 58 species total,
+and the dex grid handles the wider roster at 10 columns.
+
+Backgrounds are still the crayon meadow on all three maps; drawMeadow() is the
+one place to branch when the new art exists.

@@ -63,7 +63,7 @@ forget). The Fullscreen button is bottom-right.
 | Sling throw that lands | +100 |
 | Tap a Pokémon (auto-aim) | +25 |
 | Pokémon on screen | up to 4, standing still |
-| Pokédex | 52 species to find; caught ones stay caught |
+| Pokédex | 58 species to find; caught ones stay caught |
 | High scores | top 10, saved in the browser (`localStorage`), with a name — every run is its own row, so the same player can appear more than once |
 | New record | beating the best score on the board banners the results card with the old number |
 
@@ -81,7 +81,7 @@ Score and Pokédex are per-browser-profile. Nothing leaves the machine.
     assets/janbob_name.png  the handwritten name off the same sheet (menu only)
     assets/balls/<colour>.png  the three hand-drawn balls (320px, alpha), cut from
                             assets/custom/img/pokeballs.jpg by tools/build_balls.py
-    assets/pokemon/<id>.png 52 sprites, 320px, from the PokeAPI sprites repo
+    assets/pokemon/<id>.png 58 sprites, 320px, from the PokeAPI sprites repo
     assets/fonts/Fredoka.ttf  chunky rounded UI font (SIL Open Font License)
     vendor/phaser.min.js    Phaser 3.90
     tools/build_standalone.py  inlines everything -> dist/pokecatch.html (offline)
@@ -166,6 +166,28 @@ update `JANBOB_HAND` to match or the ball will slide off his hand.
 
 If `assets/player.png` is missing the game falls back to the old sling pad and
 draws no character, so nothing breaks.
+
+## Maps
+
+Picked on the menu before the round starts; the choice is remembered in
+`localStorage` (`pokecatch.map`) and the round is played entirely from that
+map's creature pool. The map name sits in the HUD under the score.
+
+    Ground & Sky   default — normal and flying, plus whatever no other map claims
+    Rocky Hill     rock and ground: Onix, Sandshrew, Diglett, Geodude,
+                   Graveler, Golem, Cubone
+    Blue Sea       water: 13 species, Squirtle through Quaxly
+
+Every species belongs to exactly one map, decided by its types in
+`mapForTypes()` in `src/game.js`. The check runs sea → hill → default, so a
+Water/Flying Pokémon like Gyarados is a sea creature rather than a sky one. The
+default map takes the leftovers (38 of the 58), which is what keeps the Pokédex
+fillable — a strict "normal and flying only" default would have made two thirds
+of the roster uncatchable.
+
+**Backgrounds are still the crayon meadow for all three.** When the Rocky Hill
+and Blue Sea drawings exist, drop them in `assets/` and branch on the map key in
+`drawMeadow()` — the plumbing already knows which map is running.
 
 ## The Pokédex
 
@@ -254,7 +276,7 @@ first push. `gh api repos/<user>/catch-the-pokemon/pages` shows the build status
 
 Why the split matters: the page itself is ~2 kB, CSS 5 kB, game code ~55 kB,
 Phaser 1.2 MB (cached by the browser after the first load), and the art loads on
-demand — 52 sprites at ~50 kB each plus the crayon background at 525 kB. One
+demand — 58 sprites at ~50 kB each plus the crayon background at 525 kB. One
 6.3 MB file meant a long blank screen on mobile; this way the title screen is up
 in about a second and the loader bar covers the rest.
 

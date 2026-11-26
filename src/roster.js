@@ -35,6 +35,10 @@ window.ROSTER = [
     dex: "Raichu's long tail works like a lightning rod, and it stores 100,000 volts in its cheeks.",
     real: "A lightning rod protects a building by giving the electricity a quick, easy path down to the ground." },
 
+  { id: 27, name: 'Sandshrew', types: ['Ground'], h: 0.6, w: 12.0,
+    dex: "It curls into a spiky ball and rolls away when it is frightened.",
+    real: "Armadillos roll into a ball the same way, and their armour is made of bone plates under the skin." },
+
   { id: 37, name: 'Vulpix', types: ['Fire'], h: 0.6, w: 9.9,
     dex: "Its flame is still small, so Vulpix practises every night by breathing fire at the moon.",
     real: "Foxes hunting in deep snow sense the Earth's magnetic field, and they pounce toward the north-east." },
@@ -42,6 +46,10 @@ window.ROSTER = [
   { id: 39, name: 'Jigglypuff', types: ['Normal', 'Fairy'], h: 0.5, w: 5.5,
     dex: "It sings a sleepy song, then gets cross when nobody stays awake to hear the end.",
     real: "Sound travels as invisible waves through the air. Louder sounds carry more energy, which is why they can make your ears ring." },
+
+  { id: 50, name: 'Diglett', types: ['Ground'], h: 0.2, w: 0.8,
+    dex: "Diglett lives its whole life underground, leaving neat little mounds of soil behind it.",
+    real: "Earthworms do the same job: they swallow soil and pass it through, which mixes it and lets air in." },
 
   { id: 52, name: 'Meowth', types: ['Normal'], h: 0.4, w: 4.2,
     dex: "Meowth loves anything shiny and keeps a secret stash of coins in a safe place.",
@@ -71,6 +79,18 @@ window.ROSTER = [
     dex: "It throws a thousand punches in two seconds, and each one could shift a mountain.",
     real: "Muscles work in pairs: one pulls a bone one way and its partner pulls it back, which is why your arm bends both ways." },
 
+  { id: 74, name: 'Geodude', types: ['Rock', 'Ground'], h: 0.4, w: 20.0,
+    dex: "It looks so much like a rock that people sit on it by mistake.",
+    real: "Some desert rocks really do creep along the ground, when a little ice forms under them at night." },
+
+  { id: 75, name: 'Graveler', types: ['Rock', 'Ground'], h: 1.0, w: 105.0,
+    dex: "It rolls down the mountain and does not much care what it knocks over on the way.",
+    real: "A rolling stone speeds up because gravity keeps pulling it downhill, not because it gets heavier." },
+
+  { id: 76, name: 'Golem', types: ['Rock', 'Ground'], h: 1.4, w: 300.0,
+    dex: "It sheds its rocky shell once a year, and the shell it leaves behind is as hard as stone.",
+    real: "Rocks wear away by erosion: wind, rain and ice break them down, and that is where sand and soil come from." },
+
   { id: 94, name: 'Gengar', types: ['Ghost', 'Poison'], h: 1.5, w: 40.5,
     dex: "Gengar hides inside shadows and giggles at anyone it manages to frighten.",
     real: "A shadow is not a thing - it is just a patch of ground that light could not reach because something got in the way." },
@@ -78,6 +98,10 @@ window.ROSTER = [
   { id: 95, name: 'Onix', types: ['Rock', 'Ground'], h: 8.8, w: 210.0,
     dex: "It tunnels through the earth at 80 km/h, so the ground rumbles long after it has gone.",
     real: "The Grand Canyon was carved by one river, grain by grain, over six million years. Slow things add up." },
+
+  { id: 104, name: 'Cubone', types: ['Ground'], h: 0.4, w: 6.5,
+    dex: "Cubone wears its mother's skull like a helmet and cries at the moon when nobody is looking.",
+    real: "Bones are alive: they grow, they mend when they break, and special cells rebuild them all the time." },
 
   { id: 123, name: 'Scyther', types: ['Bug', 'Flying'], h: 1.5, w: 56.0,
     dex: "Its blade arms are so sharp that Scyther can slice through a log without slowing down.",

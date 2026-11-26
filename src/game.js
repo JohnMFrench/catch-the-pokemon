@@ -74,6 +74,37 @@
     Steel: 0xb7b7ce, Fairy: 0xd685ad
   };
 
+  // The three maps. Each species belongs to exactly one of them, decided by its
+  // types, so nothing becomes uncatchable. Sea and hill are checked first so a
+  // Water/Flying Pokémon counts as a sea one rather than a sky one.
+  const MAPS = {
+    ground: { name: 'Ground & Sky', blurb: 'Normal and flying Pokémon, plus the rest', types: ['Normal', 'Flying'] },
+    rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'] },
+    sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'] }
+  };
+  const MAP_ORDER = ['ground', 'rocky', 'sea'];      // what the picker shows
+  const MAP_PRIORITY = ['sea', 'rocky', 'ground'];   // most specific first
+
+  function mapForTypes(types) {
+    const t = types || [];
+    for (let i = 0; i < MAP_PRIORITY.length; i++) {
+      const key = MAP_PRIORITY[i];
+      if (MAPS[key].types.some((x) => t.indexOf(x) !== -1)) return key;
+    }
+    return 'ground';   // fire, electric, grass, ... live on the default map
+  }
+
+  function loadMapChoice() {
+    try {
+      const k = localStorage.getItem('pokecatch.map');
+      return MAPS[k] ? k : 'ground';
+    } catch (e) { return 'ground'; }
+  }
+
+  function saveMapChoice(key) {
+    try { localStorage.setItem('pokecatch.map', key); } catch (e) { /* private mode */ }
+  }
+
   // Hand-drawn balls, cut from the crayon sheet by tools/build_balls.py.
   // Purely cosmetic: they all score the same, they just cycle on every throw
   // (poké -> great -> master -> poké ...). Insertion order IS the cycle order.
@@ -436,18 +467,61 @@
         .setStroke(C.ink, 7);
 
       const bx = W * 0.42;
-      makeButton(this, bx, 350, 330, 88, 'PLAY', C.yellowNum, () => this.scene.start('Game'));
-      makeButton(this, bx, 452, 330, 72, 'POKÉDEX  ' + st.caught.length + '/' + ACTIVE.length, 0xa8dd86,
+
+      // ---- which map the round is played on, picked before it starts
+      let chosen = loadMapChoice();
+      const chipY = 292, chipW = 140, chipH = 46, gap = 10;
+      const total = MAP_ORDER.length * chipW + (MAP_ORDER.length - 1) * gap;
+      const blurb = label(this, bx, 340, MAPS[chosen].blurb, 16, C.ink, true)
+        .setStroke(C.white, 5).setAlpha(0.85);
+      const chips = {};
+
+      const paintChips = () => {
+        MAP_ORDER.forEach((key) => {
+          const c = chips[key];
+          const on = key === chosen;
+          c.g.clear();
+          c.g.fillStyle(on ? C.yellowNum : 0xffffff, on ? 1 : 0.70);
+          c.g.fillRoundedRect(c.cx - chipW / 2, chipY - chipH / 2, chipW, chipH, chipH / 2);
+          c.g.lineStyle(on ? 4 : 2, C.inkNum, on ? 1 : 0.45);
+          c.g.strokeRoundedRect(c.cx - chipW / 2, chipY - chipH / 2, chipW, chipH, chipH / 2);
+          c.t.setAlpha(on ? 1 : 0.6);
+        });
+        blurb.setText(MAPS[chosen].blurb);
+      };
+
+      MAP_ORDER.forEach((key, i) => {
+        const cx = bx - total / 2 + chipW / 2 + i * (chipW + gap);
+        chips[key] = {
+          cx: cx,
+          g: this.add.graphics(),
+          t: label(this, cx, chipY, MAPS[key].name, 15, C.ink, true)
+        };
+        const zone = this.add.zone(cx, chipY, chipW, chipH)
+          .setOrigin(0.5).setInteractive({ useHandCursor: true });
+        zone.on('pointerdown', () => {
+          if (chosen === key) return;
+          chosen = key;
+          saveMapChoice(key);
+          paintChips();
+          this.tweens.add({ targets: chips[key].t, scale: 1.12, duration: 90, yoyo: true });
+        });
+      });
+      paintChips();
+
+      const play = () => this.scene.start('Game', { map: chosen });
+      makeButton(this, bx, 404, 330, 82, 'PLAY', C.yellowNum, play);
+      makeButton(this, bx, 492, 330, 66, 'POKÉDEX  ' + st.caught.length + '/' + ACTIVE.length, 0xa8dd86,
         () => this.scene.start('Dex'));
-      makeButton(this, bx, 538, 330, 64, 'How to play', 0xffffff, () => this.showHowTo());
+      makeButton(this, bx, 566, 330, 58, 'How to play', 0xffffff, () => this.showHowTo());
 
       // best score
       const best = st.board.length ? st.board[0].score : 0;
-      label(this, bx, 620, best > 0 ? ('Best: ' + best + ' by ' + st.board[0].name) : 'No scores yet — be the first!',
-        22, C.ink, true).setStroke(C.white, 6).setAlpha(0.9);
+      label(this, bx, 634, best > 0 ? ('Best: ' + best + ' by ' + st.board[0].name) : 'No scores yet — be the first!',
+        21, C.ink, true).setStroke(C.white, 6).setAlpha(0.9);
 
-      this.input.keyboard.on('keydown-ENTER', () => this.scene.start('Game'));
-      this.input.keyboard.on('keydown-SPACE', () => this.scene.start('Game'));
+      this.input.keyboard.on('keydown-ENTER', play);
+      this.input.keyboard.on('keydown-SPACE', play);
     }
 
     showHowTo() {
@@ -661,6 +735,12 @@
   class GameScene extends Phaser.Scene {
     constructor() { super('Game'); }
 
+    // Which map this round is on; the menu passes it in, and the last choice is
+    // remembered if a scene starts without one (Play again, tests, deep links).
+    init(data) {
+      this.chosenMap = (data && MAPS[data.map]) ? data.map : loadMapChoice();
+    }
+
     create() {
       drawMeadow(this);
 
@@ -675,6 +755,11 @@
       this.hintShown = false;
       this.aim = null;
       this.dex = loadState().caught;
+
+      // Only this map's species spawn, so each map feels like somewhere else.
+      // The pool can never be empty: the default map catches anything left over.
+      this.pool = ACTIVE.filter((p) => mapForTypes(p.types) === this.chosenMap);
+      if (!this.pool.length) this.pool = ACTIVE.slice();
       this.thrownSpeed = 0;
       this.ballHits = new Set();     // Pokémon this throw has already bounced off
 
@@ -771,6 +856,9 @@
     buildHud() {
       this.scoreText = label(this, 34, 26, 'SCORE 0', 34, C.ink, true)
         .setOrigin(0, 0).setDepth(40).setStroke(C.white, 7);
+      // which map this round is on
+      label(this, 34, 64, MAPS[this.chosenMap].name.toUpperCase(), 14, C.ink, true)
+        .setOrigin(0, 0).setDepth(40).setAlpha(0.55).setStroke(C.white, 5);
       this.caughtText = label(this, W - 34, 26, 'CAUGHT 0', 26, C.ink, true)
         .setOrigin(1, 0).setDepth(40).setAlpha(0.9).setStroke(C.white, 6);
       this.timerText = label(this, W / 2, 50, this.fmt(this.timeLeft), 54, C.ink, true).setDepth(40);
@@ -1006,8 +1094,8 @@
     }
 
     spawnPokemon() {
-      if (!ACTIVE.length) return;
-      const spec = ACTIVE[Math.floor(Math.random() * ACTIVE.length)];
+      if (!this.pool.length) return;
+      const spec = this.pool[Math.floor(Math.random() * this.pool.length)];
 
       // Spawn in the first free column: with four columns and at most four
       // Pokémon out, nothing ever lands on top of anything else.
