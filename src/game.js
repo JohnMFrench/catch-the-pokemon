@@ -22,9 +22,9 @@
     minDrag: 30,           // less than this and nothing is thrown
     launchK: 6.0,          // pull distance -> launch speed
     // A throw at or above this launch speed bounces off instead of catching.
-    // A full pull is maxDrag * launchK = 170 * 6 = 1020, so 920 is ~90%:
-    // you have to yank it right back for the ball to be too hot to hold.
-    bounceSpeed: 920,
+    // A full pull is maxDrag * launchK = 170 * 6 = 1020, so 828 is ~81%: the
+    // red arc appears earlier than it used to (was 920 / ~90%).
+    bounceSpeed: 828,
     gravity: 340,          // gentle arc, easy to aim
     // The ball bounces off the ground instead of being lost, so a sling pulled
     // the wrong way still gets a second chance. groundY is where the ball's

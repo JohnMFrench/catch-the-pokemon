@@ -197,7 +197,7 @@ buried in the logic:
     hitRadius      58      how forgiving the hit test is (with ballRadius 26)
     maxDrag        170     pull length for a full-power throw
     launchK        6.0     pull distance -> launch speed (170*6 = 1020 max)
-    bounceSpeed    920     launch speed that bounces instead of catching (~90%)
+    bounceSpeed    828     launch speed that bounces instead of catching (~81%)
     tapPoints      25      what a tap-to-throw catch is worth
     groundY        682     grass line the ball bounces off
     bounceDamp     0.68    share of speed a bounce keeps (tuned to reach the band)
