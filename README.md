@@ -255,6 +255,15 @@ of the screen", not "standing on the horizon", so the horizon line is not a
 constraint on where they appear. On the dark path that puts the creatures up in
 the tree line, above the point where the path widens.
 
+Within that band the spawn slot matters too. The playfield is split into four
+columns and each spawn takes a free one, so nothing lands on top of anything
+else; the two columns nearest the middle of the screen draw from the upper 62%
+of the band and the outer two from the lower 62%. That keeps the inner pair above
+the throwing line — the ball only has to travel 84 px from a sprite's centre to
+hit it, and an inner Pokémon sat level with an outer one used to be in the way of
+a perfectly good throw. The bands overlap in the middle so a row of four still
+reads as scattered rather than as two shelves.
+
 Grey rock creatures on a grey mountain vanished into the art, so every Pokémon
 now gets a cream glow outline (Phaser FX, WebGL) plus a soft halo behind it (the
 fallback when FX isn't available).
