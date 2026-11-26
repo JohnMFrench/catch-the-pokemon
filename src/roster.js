@@ -7,6 +7,10 @@ window.ROSTER = [
     dex: "The seed on its back drinks sunshine and grows a little every day.",
     real: "Plants make their own food out of sunlight, water and air. That is called photosynthesis, and it is why leaves are green." },
 
+  { id: 3, name: 'Venusaur', types: ['Grass', 'Poison'], h: 2.0, w: 100.0,
+    dex: "The flower on its back grows bigger every time it soaks up sunshine, and it smells sweet after rain.",
+    real: "A tall tree pulls water from its roots to its highest leaves without a pump: the water is dragged up as it evaporates from the leaves." },
+
   { id: 4, name: 'Charmander', types: ['Fire'], h: 0.6, w: 8.5,
     dex: "The flame on its tail shows how it feels - it flickers when Charmander is happy.",
     real: "Fire needs three things: fuel, air and heat. Take any one away and it goes out, which is why a glass over a candle puts it out." },
@@ -19,9 +23,21 @@ window.ROSTER = [
     dex: "It pulls its head into its shell and squirts water to chase enemies away.",
     real: "A turtle's shell is part of its skeleton - about 50 bones joined together. The turtle can never climb out of it." },
 
+  { id: 9, name: 'Blastoise', types: ['Water'], h: 1.6, w: 85.5,
+    dex: "The two cannons on its shell fire water hard enough to punch a hole in steel.",
+    real: "A fire hose works on pressure: push water through a narrow nozzle and it comes out far faster than it went in." },
+
   { id: 25, name: 'Pikachu', types: ['Electric'], h: 0.4, w: 6.0,
     dex: "Pikachu stores electricity in the pouches on its cheeks and lets it go when it is startled.",
     real: "Electric eels make their own electricity with special cells. A big one can send 600 volts through the water." },
+
+  { id: 26, name: 'Raichu', types: ['Electric'], h: 0.8, w: 30.0,
+    dex: "Raichu's long tail works like a lightning rod, and it stores 100,000 volts in its cheeks.",
+    real: "A lightning rod protects a building by giving the electricity a quick, easy path down to the ground." },
+
+  { id: 37, name: 'Vulpix', types: ['Fire'], h: 0.6, w: 9.9,
+    dex: "Its flame is still small, so Vulpix practises every night by breathing fire at the moon.",
+    real: "Foxes hunting in deep snow sense the Earth's magnetic field, and they pounce toward the north-east." },
 
   { id: 39, name: 'Jigglypuff', types: ['Normal', 'Fairy'], h: 0.5, w: 5.5,
     dex: "It sings a sleepy song, then gets cross when nobody stays awake to hear the end.",
@@ -39,9 +55,21 @@ window.ROSTER = [
     dex: "Growlithe is brave and loyal, and barks loudly to warn its friends of danger.",
     real: "A dog's nose has about 300 million scent detectors. A person has roughly six million, so dogs really do smell more of the world." },
 
+  { id: 59, name: 'Arcanine', types: ['Fire'], h: 1.9, w: 155.0,
+    dex: "It can run 10,000 km in a single day, and the fire burning inside it never goes out.",
+    real: "Greyhounds are the fastest dogs, hitting 70 km/h in a few strides, but only for a few hundred metres before they overheat." },
+
   { id: 63, name: 'Abra', types: ['Psychic'], h: 0.9, w: 19.5,
     dex: "Abra sleeps eighteen hours a day, yet it can vanish before danger ever touches it.",
     real: "Sleep is when your brain files away what you learned that day. That is why a good night's sleep helps you remember things." },
+
+  { id: 65, name: 'Alakazam', types: ['Psychic'], h: 1.5, w: 48.0,
+    dex: "Its brain keeps growing for its whole life, and it forgets nothing it has ever seen.",
+    real: "Your brain has about 86 billion nerve cells, and memories are made by strengthening the connections between them." },
+
+  { id: 68, name: 'Machamp', types: ['Fighting'], h: 1.6, w: 130.0,
+    dex: "It throws a thousand punches in two seconds, and each one could shift a mountain.",
+    real: "Muscles work in pairs: one pulls a bone one way and its partner pulls it back, which is why your arm bends both ways." },
 
   { id: 94, name: 'Gengar', types: ['Ghost', 'Poison'], h: 1.5, w: 40.5,
     dex: "Gengar hides inside shadows and giggles at anyone it manages to frighten.",
@@ -50,6 +78,10 @@ window.ROSTER = [
   { id: 95, name: 'Onix', types: ['Rock', 'Ground'], h: 8.8, w: 210.0,
     dex: "It tunnels through the earth at 80 km/h, so the ground rumbles long after it has gone.",
     real: "The Grand Canyon was carved by one river, grain by grain, over six million years. Slow things add up." },
+
+  { id: 123, name: 'Scyther', types: ['Bug', 'Flying'], h: 1.5, w: 56.0,
+    dex: "Its blade arms are so sharp that Scyther can slice through a log without slowing down.",
+    real: "A mantis shrimp punches so fast that it makes a bubble in the water, and the bubble popping stuns its prey." },
 
   { id: 129, name: 'Magikarp', types: ['Water'], h: 0.9, w: 10.0,
     dex: "Magikarp flops about uselessly, but legends say it can leap clean over a mountain.",
@@ -63,6 +95,10 @@ window.ROSTER = [
     dex: "Lapras carries people across the sea on its back and sings a sad song as it swims.",
     real: "Sea turtles swim thousands of kilometres across open ocean and still find the right beach, by sensing Earth's magnetic field." },
 
+  { id: 132, name: 'Ditto', types: ['Normal'], h: 0.3, w: 4.0,
+    dex: "Ditto can copy any Pokémon perfectly, right down to the pattern on its skin.",
+    real: "Cuttlefish change colour and pattern in under a second, using tiny elastic sacs of pigment in their skin." },
+
   { id: 133, name: 'Eevee', types: ['Normal'], h: 0.3, w: 6.5,
     dex: "Eevee can become many different Pokémon, depending on where it grows up and what it lives through.",
     real: "Every dog breed came from one wolf-like ancestor, shaped by people choosing which puppies to breed." },
@@ -70,6 +106,10 @@ window.ROSTER = [
   { id: 143, name: 'Snorlax', types: ['Normal'], h: 2.1, w: 460.0,
     dex: "Snorlax eats 400 kg of food a day and then sleeps until it is hungry again.",
     real: "A hibernating bear's heart slows to a few beats a minute. It does not eat, drink or go to the toilet for months." },
+
+  { id: 145, name: 'Zapdos', types: ['Electric', 'Flying'], h: 1.6, w: 52.6,
+    dex: "Zapdos carries the thunder, and storm clouds gather wherever it chooses to fly.",
+    real: "Lightning is electricity jumping between a cloud and the ground, heated to 30,000 degrees, five times hotter than the Sun's surface." },
 
   { id: 147, name: 'Dratini', types: ['Dragon'], h: 1.8, w: 3.3,
     dex: "Dratini sheds its skin as it grows and hides in the water until the new skin is ready.",

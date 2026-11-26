@@ -1,0 +1,15 @@
+Ten more Pokémon, all from the first 150
+
+Venusaur (3), Blastoise (9), Raichu (26), Vulpix (37), Arcanine (59),
+Alakazam (65), Machamp (68), Scyther (123), Ditto (132), Zapdos (145).
+52 species total, inserted in National Dex order so both the spawn pool and the
+dex grid keep generation order.
+
+Each has the same two facts as the rest: one in-world line and one real-world
+science line (trees pulling water up, hose pressure, lightning rods, foxes and
+magnetism, greyhound overheating, 86 billion neurons, paired muscles, mantis
+shrimp cavitation, cuttlefish skin, lightning temperature). Types, height and
+weight pulled from PokeAPI into tools/dexdata.json.
+
+The dex grid now uses 10 columns above 48 species instead of squeezing 8 into a
+microscopic 7-row grid.

@@ -63,7 +63,7 @@ forget). The Fullscreen button is bottom-right.
 | Sling throw that lands | +100 |
 | Tap a Pokémon (auto-aim) | +25 |
 | Pokémon on screen | up to 4, standing still |
-| Pokédex | 42 species to find; caught ones stay caught |
+| Pokédex | 52 species to find; caught ones stay caught |
 | High scores | top 10, saved in the browser (`localStorage`), with a name — every run is its own row, so the same player can appear more than once |
 | New record | beating the best score on the board banners the results card with the old number |
 
@@ -81,7 +81,7 @@ Score and Pokédex are per-browser-profile. Nothing leaves the machine.
     assets/janbob_name.png  the handwritten name off the same sheet (menu only)
     assets/balls/<colour>.png  the three hand-drawn balls (320px, alpha), cut from
                             assets/custom/img/pokeballs.jpg by tools/build_balls.py
-    assets/pokemon/<id>.png 42 sprites, 320px, from the PokeAPI sprites repo
+    assets/pokemon/<id>.png 52 sprites, 320px, from the PokeAPI sprites repo
     assets/fonts/Fredoka.ttf  chunky rounded UI font (SIL Open Font License)
     vendor/phaser.min.js    Phaser 3.90
     tools/build_standalone.py  inlines everything -> dist/pokecatch.html (offline)
@@ -254,7 +254,7 @@ first push. `gh api repos/<user>/catch-the-pokemon/pages` shows the build status
 
 Why the split matters: the page itself is ~2 kB, CSS 5 kB, game code ~55 kB,
 Phaser 1.2 MB (cached by the browser after the first load), and the art loads on
-demand — 42 sprites at ~50 kB each plus the crayon background at 525 kB. One
+demand — 52 sprites at ~50 kB each plus the crayon background at 525 kB. One
 6.3 MB file meant a long blank screen on mobile; this way the title screen is up
 in about a second and the loader bar covers the rest.
 

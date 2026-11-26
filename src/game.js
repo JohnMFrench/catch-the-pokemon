@@ -507,9 +507,10 @@
 
       // Geometry adapts to the roster: 8 columns wide, as many rows as it
       // takes, cells shrinking so the last row stays clear of the Back button.
-      const cols = 8;
+      // Wide rosters get more columns, not a microscopic grid.
+      const cols = ACTIVE.length > 48 ? 10 : 8;
       const rows = Math.ceil(ACTIVE.length / cols);
-      const cw = 132;
+      const cw = Math.min(132, (W - 200) / cols);
       const top = 158;
       const bottom = H - 110;
       const ch = Math.min(114, (bottom - top) / rows);
