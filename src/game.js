@@ -80,10 +80,14 @@
   const MAPS = {
     ground: { name: 'Ground & Sky', blurb: 'Normal and flying Pokémon, plus the rest', types: ['Normal', 'Flying'],
               bg: 'bg-ground', field: { top: 294, bottom: 430 } },
+    // Bands are raised ~25% of their own height above where they started
+    // (rocky was 405-545, sea 410-540). A full quarter of the *screen* would
+    // push the outer columns off the mountain and into open sky, so the shift is
+    // measured against the band.
     rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'],
-              bg: 'bg-rocky',  field: { top: 405, bottom: 545 } },
+              bg: 'bg-rocky',  field: { top: 370, bottom: 510 } },
     sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'],
-              bg: 'bg-sea',    field: { top: 410, bottom: 540 } }
+              bg: 'bg-sea',    field: { top: 378, bottom: 508 } }
   };
   const MAP_ORDER = ['ground', 'rocky', 'sea'];      // what the picker shows
   const MAP_PRIORITY = ['sea', 'rocky', 'ground'];   // most specific first
