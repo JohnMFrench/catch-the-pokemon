@@ -38,4 +38,4 @@ open_it() {
 }
 open_it &
 
-exec python3 -m http.server "$PORT" --bind 0.0.0.0
+exec python3 tools/dev_server.py "$PORT"

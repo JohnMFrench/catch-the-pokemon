@@ -12,7 +12,8 @@
 
   const CFG = {
     roundSeconds: 120,     // length of one round
-    pointsPerCatch: 100,   // score for every catch
+    pointsPerCatch: 100,   // score for a sling throw that lands
+    tapPoints: 25,         // tapping a Pokémon throws for you, for less
     maxOnScreen: 4,        // how many Pokémon are loose at once
     spawnDelay: 900,       // ms between spawns
     ballRadius: 26,
@@ -29,7 +30,7 @@
     // crayon grass starts at y~363 and Janbob's head tops out around y~510, so
     // this band puts their feet on the meadow (roughly y 395-495) instead of
     // leaving them floating in the sky.
-    fieldTop: 330,
+    fieldTop: 294,         // 5% of the screen height higher than 330
     fieldBottom: 430,
     fieldLeft: 95,
     fieldRight: W - 95,
@@ -459,7 +460,7 @@
         '3.  Hit a Pokémon to catch it!',
         '4.  Red dots mean too hard - that throw bounces off!',
         '',
-        'Every catch is +' + CFG.pointsPerCatch + ' points.',
+        'Sling throw +' + CFG.pointsPerCatch + '   ·   just tapping +' + CFG.tapPoints + ' points.',
         'You have ' + CFG.roundSeconds + ' seconds.'
       ];
       steps.forEach((s, i) => {
@@ -808,13 +809,23 @@
     bindInput() {
       this.input.on('pointerdown', (p) => {
         if (!this.roundActive || this.ballState !== 'idle') return;
+
+        // Tapping a Pokémon throws at it for you. Smaller reward, but it needs
+        // no aim at all, so a very young player can still take part.
+        const hit = this.pokemonUnder(p.x, p.y);
+        if (hit) {
+          this.hideHint();
+          this.tapThrow(hit);
+          return;
+        }
+
         const nearBall = Phaser.Math.Distance.Between(p.x, p.y, CFG.launcher.x, CFG.launcher.y) < 170;
         if (nearBall || p.y > H - 300) {
           this.ballState = 'aiming';
           this.aim = { x: p.x, y: p.y };
           this.hideHint();
         } else {
-          this.showHint('Grab the ball at the bottom!', 900);
+          this.showHint('Tap a Pokémon, or drag the ball!', 900);
         }
       });
 
@@ -854,11 +865,57 @@
       return { dx: dx, dy: dy, len: len, nx: dx / (Math.hypot(dx, dy) || 1), ny: dy / (Math.hypot(dx, dy) || 1) };
     }
 
-    throwBall(pull) {
+    // The cheapest arc that lands on a Pokémon: the same solve the aim dots
+    // use, picked to arrive with the least speed (so it never bounces).
+    aimPointFor(pk) {
+      const dx = pk.box.x - CFG.launcher.x;
+      const dy = pk.box.y - CFG.launcher.y;
+      let best = null;
+      for (let t = 0.15; t <= 1.2; t += 0.01) {
+        const vx = dx / t;
+        const vy = (dy - 0.5 * CFG.gravity * t * t) / t;
+        const sp = Math.hypot(vx, vy);
+        if (!best || sp < best.sp) best = { sp: sp, vx: vx, vy: vy };
+      }
+      if (!best || !isFinite(best.sp) || best.sp < 1) return null;
+      const len = Math.min(best.sp / CFG.launchK, CFG.maxDrag);
+      return {
+        x: CFG.launcher.x - (best.vx / best.sp) * len,
+        y: CFG.launcher.y - (best.vy / best.sp) * len,
+        len: len,
+        speed: best.sp
+      };
+    }
+
+    // Which Pokémon a point lands on, using the same generous radius the ball
+    // collides with - a small child should not have to hit a pixel.
+    pokemonUnder(x, y) {
+      let best = null;
+      let bestD = Infinity;
+      this.pokemon.forEach((pk) => {
+        if (pk.caught || !pk.box.active) return;
+        const d = Phaser.Math.Distance.Between(x, y, pk.box.x, pk.box.y);
+        if (d < CFG.hitRadius + CFG.ballRadius && d < bestD) { best = pk; bestD = d; }
+      });
+      return best;
+    }
+
+    // Tap a Pokémon: the game aims for you, for a smaller reward.
+    tapThrow(pk) {
+      const aim = this.aimPointFor(pk);
+      if (!aim) return;
+      this.ballState = 'aiming';
+      this.aim = { x: aim.x, y: aim.y };
+      this.throwBall(this.pullVector(this.aim), 'tap');
+    }
+
+    throwBall(pull, kind) {
       this.shotsThrown++;
       this.aim = null;
       this.ballState = 'flying';
       this.ball.setScale(this.ballScale);
+      this.throwKind = kind || 'sling';
+      this.throwScore = this.throwKind === 'tap' ? CFG.tapPoints : CFG.pointsPerCatch;
       this.thrownSpeed = pull.len * CFG.launchK;
       this.ballHits.clear();
       // next ball in the cycle goes into your hand once this one lands
@@ -1028,7 +1085,8 @@
         const d = Phaser.Math.Distance.Between(this.ball.x, this.ball.y, pk.box.x, pk.box.y);
         if (d < CFG.hitRadius + CFG.ballRadius) {
           // Too hot to hold: it bounces off and the Pokémon complains.
-          if (this.thrownSpeed >= CFG.bounceSpeed) this.bounceOff(pk);
+          // Tap throws are aimed by the game itself, so they never bounce.
+          if (this.throwKind === 'sling' && this.thrownSpeed >= CFG.bounceSpeed) this.bounceOff(pk);
           else this.beginCatch(pk);
           return;
         }
@@ -1123,7 +1181,7 @@
     finishCatch(pk, x, y, isNew) {
       if (this.ballState === 'done') return;
       this.caughtCount += 1;
-      this.score += CFG.pointsPerCatch;
+      this.score += this.throwScore;
 
       if (this.dex.indexOf(pk.id) === -1) this.dex.push(pk.id);
 
@@ -1148,7 +1206,7 @@
       });
 
       // +points
-      const pop = label(this, x, y - 40, '+' + CFG.pointsPerCatch, 44, C.yellow, true)
+      const pop = label(this, x, y - 40, '+' + this.throwScore, 44, C.yellow, true)
         .setStroke(C.ink, 7).setDepth(37);
       this.tweens.add({
         targets: pop, y: y - 120, alpha: 0, duration: 850, ease: 'Quad.out',
@@ -1184,7 +1242,7 @@
     showHint(text, ms) {
       if (this.hint) { this.hint.destroy(); this.hint = null; }
       if (this.ballState === 'done') return;
-      const t = label(this, 0, 0, text || 'Drag the ball down and let go!', 24, C.ink, true);
+      const t = label(this, 0, 0,          text || 'Drag the ball down, or tap a Pokémon!', 24, C.ink, true);
       const bw = t.width + 48, bh = 56;
       const bubble = this.add.container(CFG.launcher.x, CFG.launcher.y - 100).setDepth(38);
       const g = this.add.graphics();
@@ -1398,22 +1456,7 @@
       const live = s.pokemon.filter(p => !p.caught && p.box.active);
       const pk = live[index || 0];
       if (!pk) return null;
-      const dx = pk.box.x - CFG.launcher.x;
-      const dy = pk.box.y - CFG.launcher.y;
-      let best = null;
-      for (let t = 0.15; t <= 1.2; t += 0.01) {
-        const vx = dx / t;
-        const vy = (dy - 0.5 * CFG.gravity * t * t) / t;
-        const sp = Math.hypot(vx, vy);
-        if (!best || sp < best.sp) best = { sp: sp, vx: vx, vy: vy };
-      }
-      const len = Math.min(best.sp / CFG.launchK, CFG.maxDrag);
-      return {
-        x: CFG.launcher.x - (best.vx / best.sp) * len,
-        y: CFG.launcher.y - (best.vy / best.sp) * len,
-        len: len,
-        speed: best.sp
-      };
+      return s.aimPointFor(pk);
     },
     // test helper: throw at a Pokémon through the exact same path a drag uses
     autoThrow: function (index) {

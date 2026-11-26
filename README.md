@@ -41,6 +41,8 @@ scripts, so the LAN URL is the reliable route on an iPhone).
 - The ball sits in Janbob's raised hand at the bottom of the screen.
 - Press on it, drag **down / back** — the dotted arc shows where it will go.
 - Let go to throw. Hit a Pokémon to catch it.
+- **Or just tap a Pokémon** — the game aims and throws for you. It is the way in
+  for a younger player, and it scores **25** instead of 100.
 - Pull it **nearly all the way back** and the dotted arc turns **red**: that
   throw is too fast, the ball bounces off and the Pokémon says *Oof!*. The
   threshold is ~90% of a full pull, so only a hard yank bounces.
@@ -54,7 +56,8 @@ forget). The Fullscreen button is bottom-right.
 | | |
 |---|---|
 | Round length | 120 seconds |
-| Points per catch | +100, flat |
+| Sling throw that lands | +100 |
+| Tap a Pokémon (auto-aim) | +25 |
 | Pokémon on screen | up to 4, standing still |
 | Pokédex | 42 species to find; caught ones stay caught |
 | High scores | top 10, saved in the browser (`localStorage`), with a name — every run is its own row, so the same player can appear more than once |
@@ -191,6 +194,8 @@ buried in the logic:
     maxDrag        170     pull length for a full-power throw
     launchK        6.0     pull distance -> launch speed (170*6 = 1020 max)
     bounceSpeed    920     launch speed that bounces instead of catching (~90%)
+    tapPoints      25      what a tap-to-throw catch is worth
+    fieldTop       294     highest a Pokémon can spawn (5% of screen above 330)
     gravity        340     arc of the ball
     spriteSize     142     base on-screen size (farther up = smaller)
     janbob.height  200     how tall Janbob stands (his hand anchors the ball)
