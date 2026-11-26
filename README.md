@@ -7,12 +7,18 @@ No build step, no internet, no accounts.
 
 ## Play it
 
-**Easiest — one file, double-click:**
+**As a website — the repo root is the site.** Upload/copy these five things and
+it runs anywhere static:
 
-    dist/pokecatch.html
+    index.html  style.css  src/  vendor/  assets/   (+ .nojekyll for Pages)
 
-Everything (Phaser, sprites, font, code) is inlined, so it runs straight off
-the filesystem: no server, no Wi-Fi, works from a USB stick.
+**Offline, one file — double-click:**
+
+    python3 tools/build_standalone.py     # -> dist/pokecatch.html
+
+That build inlines Phaser, every sprite, the font and the code into a single
+HTML file, so it runs straight off the filesystem: no server, no Wi-Fi, works
+from a USB stick. It is a build artifact, not the thing that gets published.
 
 **From source (better while editing):**
 
@@ -71,7 +77,9 @@ Score and Pokédex are per-browser-profile. Nothing leaves the machine.
     assets/pokemon/<id>.png 42 sprites, 320px, from the PokeAPI sprites repo
     assets/fonts/Fredoka.ttf  chunky rounded UI font (SIL Open Font License)
     vendor/phaser.min.js    Phaser 3.90
-    tools/build_standalone.py  inlines everything -> dist/pokecatch.html
+    tools/build_standalone.py  inlines everything -> dist/pokecatch.html (offline)
+    tools/verify_site.py    pre-deploy check: every referenced asset exists
+    .nojekyll               tells GitHub Pages to serve the folder as-is
     start.sh                local dev server
 
 ## The background
@@ -196,26 +204,32 @@ generation.
 
 ## Publish on GitHub Pages
 
-The site is a single file: `docs/index.html`, with `docs/.nojekyll` beside it so
-GitHub serves the folder as-is instead of running Jekyll over it.
+The repo root is the site — no build step, no staging copy, nothing to keep in
+sync. Pages serves `index.html`, which pulls `style.css`, `src/*.js`,
+`vendor/phaser.min.js` and (at runtime) every file under `assets/`.
 
-    python3 tools/stage_pages.py     # rebuild + stage into docs/
-    git add docs && git commit -m "stage for Pages"
+Before pushing, check the asset graph:
 
-One-time repo setup, then switch Pages on:
+    python3 tools/verify_site.py      # every roster/ball/background file exists
+
+Then, one time:
 
     git init -b main && git add -A && git commit -m "Catch the Pokémon"
     gh repo create catch-the-pokemon --public --source=. --remote=origin --push
     gh api -X POST repos/<user>/catch-the-pokemon/pages \
-        -f 'source[branch]=main' -f 'source[path]=/docs'
+        -f 'source[branch]=main' -f 'source[path]=/'
 
-Site lands at `https://<user>.github.io/catch-the-pokemon/` a minute or two
-after the first push; `gh api repos/<user>/catch-the-pokemon/pages` shows the
-build status.
+Site: `https://<user>.github.io/catch-the-pokemon/` — a minute or two after the
+first push. `gh api repos/<user>/catch-the-pokemon/pages` shows the build status.
 
-`dist/` is git-ignored — it is the local build; `docs/index.html` is the
-published copy. Re-run `stage_pages.py` after every game change: it rebuilds from
-source first, so the staged site cannot drift.
+Why the split matters: the page itself is ~2 kB, CSS 5 kB, game code ~55 kB,
+Phaser 1.2 MB (cached by the browser after the first load), and the art loads on
+demand — 42 sprites at ~50 kB each plus the crayon background at 525 kB. One
+6.3 MB file meant a long blank screen on mobile; this way the title screen is up
+in about a second and the loader bar covers the rest.
+
+Pages deploys from the branch, so any push to `main` republishes. `dist/` is
+git-ignored: it is the offline single-file artifact, not part of the site.
 
 ⚠ **Before publishing:** this is a fan project using Pokémon sprites and names
 (see Credits). Pages on a free GitHub account is a public site, so publishing
