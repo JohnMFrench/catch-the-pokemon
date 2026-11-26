@@ -103,6 +103,14 @@ window.ROSTER = [
     dex: "Cubone wears its mother's skull like a helmet and cries at the moon when nobody is looking.",
     real: "Bones are alive: they grow, they mend when they break, and special cells rebuild them all the time." },
 
+  { id: 111, name: 'Rhyhorn', types: ['Ground', 'Rock'], h: 1.0, w: 115.0,
+    dex: "It charges in a perfectly straight line and then forgets why it started.",
+    real: "A charging rhino hits 55 km/h and cannot turn quickly. Its eyesight is poor, so it relies on smell." },
+
+  { id: 112, name: 'Rhydon', types: ['Ground', 'Rock'], h: 1.9, w: 120.0,
+    dex: "Its horn can shatter diamond, and it drills straight through mountains with it.",
+    real: "A drill works by squeezing all the force onto a tiny point — which is why a sharp tip cuts where a flat one cannot." },
+
   { id: 123, name: 'Scyther', types: ['Bug', 'Flying'], h: 1.5, w: 56.0,
     dex: "Its blade arms are so sharp that Scyther can slice through a log without slowing down.",
     real: "A mantis shrimp punches so fast that it makes a bubble in the water, and the bubble popping stuns its prey." },
@@ -126,6 +134,18 @@ window.ROSTER = [
   { id: 133, name: 'Eevee', types: ['Normal'], h: 0.3, w: 6.5,
     dex: "Eevee can become many different Pokémon, depending on where it grows up and what it lives through.",
     real: "Every dog breed came from one wolf-like ancestor, shaped by people choosing which puppies to breed." },
+
+  { id: 140, name: 'Kabuto', types: ['Rock', 'Water'], h: 0.5, w: 11.5,
+    dex: "It has not changed in 300 million years and buries itself in the sand when it is scared.",
+    real: "Horseshoe crabs are living fossils: barely changed in 450 million years, and their blue blood is used to test medicines." },
+
+  { id: 141, name: 'Kabutops', types: ['Rock', 'Water'], h: 1.3, w: 40.5,
+    dex: "It swims faster than anything else in the sea and slices with its scythe arms.",
+    real: "A fossil forms when an animal is buried in mud quickly. Over millions of years the mud turns to rock around the bones." },
+
+  { id: 142, name: 'Aerodactyl', types: ['Rock', 'Flying'], h: 1.8, w: 59.0,
+    dex: "It was brought back from a fossil, and it screams as it dives out of the sky.",
+    real: "Birds and pterosaurs had hollow bones: pockets of air make a skeleton strong but light enough to fly." },
 
   { id: 143, name: 'Snorlax', types: ['Normal'], h: 2.1, w: 460.0,
     dex: "Snorlax eats 400 kg of food a day and then sleeps until it is hungry again.",

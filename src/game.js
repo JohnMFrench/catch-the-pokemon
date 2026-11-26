@@ -80,25 +80,25 @@
   const MAPS = {
     ground: { name: 'Ground & Sky', blurb: 'Normal and flying Pokémon, plus the rest', types: ['Normal', 'Flying'],
               bg: 'bg-ground', field: { top: 294, bottom: 430 } },
-    // Bands are raised ~25% of their own height above where they started
-    // (rocky was 405-545, sea 410-540). A full quarter of the *screen* would
-    // push the outer columns off the mountain and into open sky, so the shift is
-    // measured against the band.
+    // Bands sit 20% of the screen height (144px) above where they started
+    // (rocky 370-510, sea 378-508), deliberately ignoring where the horizon is
+    // in the drawing: the request was "up towards the top", not "on the ground".
     rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'],
-              bg: 'bg-rocky',  field: { top: 370, bottom: 510 } },
+              bg: 'bg-rocky',  field: { top: 226, bottom: 366 } },
     sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'],
-              bg: 'bg-sea',    field: { top: 378, bottom: 508 } }
+              bg: 'bg-sea',    field: { top: 234, bottom: 364 } }
   };
-  const MAP_ORDER = ['ground', 'rocky', 'sea'];      // what the picker shows
-  const MAP_PRIORITY = ['sea', 'rocky', 'ground'];   // most specific first
+  const MAP_ORDER = ['ground', 'rocky', 'sea'];   // picker order
 
-  function mapForTypes(types) {
+  // A Pokémon lives on every map whose types it has, so a dual type is at home
+  // in both: Gyarados (Water/Flying) is a sea creature AND a sky one, Aerodactyl
+  // (Rock/Flying) is a hill creature AND a sky one. Anything no map claims -
+  // fire, electric, grass - lives on the default map, which keeps the Pokédex
+  // fillable.
+  function mapsForTypes(types) {
     const t = types || [];
-    for (let i = 0; i < MAP_PRIORITY.length; i++) {
-      const key = MAP_PRIORITY[i];
-      if (MAPS[key].types.some((x) => t.indexOf(x) !== -1)) return key;
-    }
-    return 'ground';   // fire, electric, grass, ... live on the default map
+    const homes = MAP_ORDER.filter((key) => MAPS[key].types.some((x) => t.indexOf(x) !== -1));
+    return homes.length ? homes : ['ground'];
   }
 
   function loadMapChoice() {
@@ -789,7 +789,7 @@
 
       // Only this map's species spawn, so each map feels like somewhere else.
       // The pool can never be empty: the default map catches anything left over.
-      this.pool = ACTIVE.filter((p) => mapForTypes(p.types) === this.chosenMap);
+      this.pool = ACTIVE.filter((p) => mapsForTypes(p.types).indexOf(this.chosenMap) !== -1);
       if (!this.pool.length) this.pool = ACTIVE.slice();
 
       // Each drawing puts its ground at a different height, so the band where

@@ -63,7 +63,7 @@ forget). The Fullscreen button is bottom-right.
 | Sling throw that lands | +100 |
 | Tap a Pokémon (auto-aim) | +25 |
 | Pokémon on screen | up to 4, standing still |
-| Pokédex | 58 species to find; caught ones stay caught |
+| Pokédex | 63 species to find; caught ones stay caught |
 | High scores | top 10, saved in the browser (`localStorage`), with a name — every run is its own row, so the same player can appear more than once |
 | New record | beating the best score on the board banners the results card with the old number |
 
@@ -81,7 +81,7 @@ Score and Pokédex are per-browser-profile. Nothing leaves the machine.
     assets/janbob_name.png  the handwritten name off the same sheet (menu only)
     assets/balls/<colour>.png  the three hand-drawn balls (320px, alpha), cut from
                             assets/custom/img/pokeballs.jpg by tools/build_balls.py
-    assets/pokemon/<id>.png 58 sprites, 320px, from the PokeAPI sprites repo
+    assets/pokemon/<id>.png 63 sprites, 320px, from the PokeAPI sprites repo
     assets/fonts/Fredoka.ttf  chunky rounded UI font (SIL Open Font License)
     vendor/phaser.min.js    Phaser 3.90
     tools/build_standalone.py  inlines everything -> dist/pokecatch.html (offline)
@@ -173,34 +173,42 @@ Picked on the menu before the round starts; the choice is remembered in
 `localStorage` (`pokecatch.map`) and the round is played entirely from that
 map's creature pool. The map name sits in the HUD under the score.
 
-    Ground & Sky   default — normal and flying, plus whatever no other map claims
-    Rocky Hill     rock and ground: Onix, Sandshrew, Diglett, Geodude,
-                   Graveler, Golem, Cubone
-    Blue Sea       water: 13 species, Squirtle through Quaxly
+    Ground & Sky   40 species — normal and flying, plus whatever no other map claims
+    Rocky Hill     12 species — rock and ground, Onix through Aerodactyl
+    Blue Sea       15 species — water, Squirtle through Quaxly
 
-Every species belongs to exactly one map, decided by its types in
-`mapForTypes()` in `src/game.js`. The check runs sea → hill → default, so a
-Water/Flying Pokémon like Gyarados is a sea creature rather than a sky one. The
-default map takes the leftovers (38 of the 58), which is what keeps the Pokédex
-fillable — a strict "normal and flying only" default would have made two thirds
-of the roster uncatchable.
+A species belongs to **every** map whose types it has, decided by
+`mapsForTypes()` in `src/game.js`. A dual type is therefore at home in both: a
+Water/Flying Gyarados turns up at sea *and* in the sky, and a Rock/Flying
+Aerodactyl on the hill *and* in the sky. Anything no map claims (fire, electric,
+grass, and the rest) falls back to the default map, which is what keeps the
+Pokédex fillable — a strict "normal and flying only" default would have made two
+thirds of the roster uncatchable.
 
 Each map draws its own sheet photo through `tools/build_bg.py`, which rectifies
 the paper out of the photo, white-balances on the unpainted paper, and crops to
 16:9:
 
     python3 tools/build_bg.py --src assets/rocky-hill.jpg --out16 assets/rocky-hill-16x9.jpg --bias 0.2
-    python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 0.3
+    python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 1.0
 
 `--bias` is how much of the crop's lost height comes off the top: 0 keeps all the
-sky, 1 keeps all the ground. The drawings are 1.27:1 and the canvas is 1.78:1, so
-something has to go — 0.2 keeps the sun, the peak and the rocky ground for the
-hill, and 0.3 keeps the sun and the horizon for the sea. Those numbers were
-picked by eye from side-by-side crops, so re-check them if a sheet is redrawn.
+sky, 1 keeps all the ground. Both drawings are roughly 1.1–1.3:1 against a 1.78:1
+canvas, so about a quarter of the height has to go somewhere.
 
-Because each drawing puts its ground at a different height, the band Pokémon
+The hill runs at 0.2: sun, peak and rocky ground all survive. The sea runs at
+**1.0**, bottom-aligned, because anything less sliced the tops off the waves —
+the sea foreground is the point of that drawing, so it won. What it costs is the
+sun: at 1.0 only the bottom of its rays shows at the top edge. A vertical squash
+that kept both would have flattened the picture by roughly 28%, which looks worse
+than losing the sun. These numbers were picked by eye from side-by-side crops, so
+re-check them if a sheet is redrawn.
+
+Because the drawings put their ground at different heights, the band Pokémon
 spawn in belongs to the map (`field:` in `MAPS`), not to one global value:
-294–430 on the meadow, 405–545 on the hill, 410–540 on the sea.
+294–430 on the meadow, 226–366 on the hill, 234–364 on the sea. The two new maps
+sit deliberately high — "up towards the top of the screen", not "standing on the
+horizon" — so the horizon line is not a constraint on where they appear.
 
 Grey rock creatures on a grey mountain vanished into the art, so every Pokémon
 now gets a cream glow outline (Phaser FX, WebGL) plus a soft halo behind it (the
@@ -293,7 +301,7 @@ first push. `gh api repos/<user>/catch-the-pokemon/pages` shows the build status
 
 Why the split matters: the page itself is ~2 kB, CSS 5 kB, game code ~55 kB,
 Phaser 1.2 MB (cached by the browser after the first load), and the art loads on
-demand — 58 sprites at ~50 kB each plus the crayon background at 525 kB. One
+demand — 63 sprites at ~50 kB each plus the crayon background at 525 kB. One
 6.3 MB file meant a long blank screen on mobile; this way the title screen is up
 in about a second and the loader bar covers the rest.
 
