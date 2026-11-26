@@ -249,12 +249,11 @@ re-check them if a sheet is redrawn.
 
 Because the drawings put their ground at different heights, the band Pokémon
 spawn in belongs to the map (`field:` in `MAPS`), not to one global value:
-294–430 on the meadow, 226–366 on the hill, 234–364 on the sea, 350–520 on the dark
-path. The two new maps
-sit deliberately high — "up towards the top of the screen", not "standing on the
-horizon" — so the horizon line is not a constraint on where they appear. The dark
-path is the exception: its band stayed where it was when the backdrop was
-re-oriented, and now sits low on the path in front of the tree line.
+294–430 on the meadow, 226–366 on the hill, 234–364 on the sea, 226–366 on the
+dark path. The three non-meadow maps sit deliberately high — "up towards the top
+of the screen", not "standing on the horizon", so the horizon line is not a
+constraint on where they appear. On the dark path that puts the creatures up in
+the tree line, above the point where the path widens.
 
 Grey rock creatures on a grey mountain vanished into the art, so every Pokémon
 now gets a cream glow outline (Phaser FX, WebGL) plus a soft halo behind it (the

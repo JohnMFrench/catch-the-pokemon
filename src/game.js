@@ -90,9 +90,9 @@
               bg: 'bg-sea',    field: { top: 234, bottom: 364 } },
     // The dark path sheet is landscape with the path drawn down the middle, so
     // the 16:9 crop keeps the full width and takes its loss off top and bottom.
-    // The band sits low on that path, in front of the tree line.
+    // Its band sits as high as the hill's and the sea's, up in the tree line.
     dark:   { name: 'Dark Path',    blurb: 'Dark Pokémon',                             types: ['Dark'],
-              bg: 'bg-dark',   field: { top: 350, bottom: 520 } }
+              bg: 'bg-dark',   field: { top: 226, bottom: 366 } }
   };
   const MAP_ORDER = ['ground', 'rocky', 'sea', 'dark'];   // picker order
 

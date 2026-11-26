@@ -41,7 +41,7 @@ Canvas is a fixed 1280x720 logical space, Phaser FIT + CENTER_BOTH.
 Spawn bands, per map (y in the 720-tall space; deliberate, do not "fix" to the
 horizon):
 
-    ground 294-430    rocky 226-366    sea 234-364    dark 350-520
+    ground 294-430    rocky 226-366    sea 234-364    dark 226-366
 
 Measured art landmarks (frame fractions, for future band work):
 sea waterline 42.9%, sea waves from ~79%, hill slope from
