@@ -78,9 +78,12 @@
   // types, so nothing becomes uncatchable. Sea and hill are checked first so a
   // Water/Flying Pokémon counts as a sea one rather than a sky one.
   const MAPS = {
-    ground: { name: 'Ground & Sky', blurb: 'Normal and flying Pokémon, plus the rest', types: ['Normal', 'Flying'] },
-    rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'] },
-    sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'] }
+    ground: { name: 'Ground & Sky', blurb: 'Normal and flying Pokémon, plus the rest', types: ['Normal', 'Flying'],
+              bg: 'bg-ground', field: { top: 294, bottom: 430 } },
+    rocky:  { name: 'Rocky Hill',   blurb: 'Rock and ground Pokémon',                  types: ['Rock', 'Ground'],
+              bg: 'bg-rocky',  field: { top: 405, bottom: 545 } },
+    sea:    { name: 'Blue Sea',     blurb: 'Water Pokémon',                            types: ['Water'],
+              bg: 'bg-sea',    field: { top: 410, bottom: 540 } }
   };
   const MAP_ORDER = ['ground', 'rocky', 'sea'];      // what the picker shows
   const MAP_PRIORITY = ['sea', 'rocky', 'ground'];   // most specific first
@@ -277,6 +280,21 @@
     g.destroy();
   }
 
+  // Soft cream glow, drawn behind every Pokémon. Rock creatures on the rocky
+  // drawing were grey-on-grey; this lifts them without a hard sticker edge.
+  function makeHaloTexture(scene) {
+    const size = 256;
+    const tex = scene.textures.createCanvas('halo', size, size);
+    const ctx = tex.getContext();
+    const g = ctx.createRadialGradient(size / 2, size / 2, size * 0.06, size / 2, size / 2, size / 2);
+    g.addColorStop(0.00, 'rgba(255,248,231,0.85)');
+    g.addColorStop(0.55, 'rgba(255,248,231,0.55)');
+    g.addColorStop(1.00, 'rgba(255,248,231,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, size, size);
+    tex.refresh();
+  }
+
   function makeShadowTexture(scene) {
     const g = scene.make.graphics({ x: 0, y: 0, add: false });
     g.fillStyle(0x1d3b2a, 0.16);
@@ -286,15 +304,17 @@
   }
 
   // ------------------------------------------------------------- backdrop
-  function drawMeadow(scene) {
-    // The hand-drawn art wins whenever it is present; the code-drawn meadow
-    // stays as a fallback so the game still looks finished without it.
-    if (scene.textures.exists('background')) {
-      scene.add.image(0, 0, 'background')
+  // Each map has its own backdrop; the default meadow is also the fallback for
+  // any map whose art has not been drawn yet.
+  function drawMeadow(scene, mapKey) {
+    const map = MAPS[mapKey] || MAPS.ground;
+    const key = scene.textures.exists(map.bg) ? map.bg
+      : (scene.textures.exists('bg-ground') ? 'bg-ground' : null);
+    if (key) {
+      return scene.add.image(0, 0, key)
         .setOrigin(0, 0)
         .setDisplaySize(W, H)
         .setDepth(-20);
-      return;
     }
     if (!scene.textures.exists('meadow')) {
       const tex = scene.textures.createCanvas('meadow', 8, H);
@@ -389,7 +409,9 @@
         console.warn('Could not load', file.key);
       });
 
-      this.load.image('background', inline.bg || 'assets/background.jpg');
+      this.load.image('bg-ground', inline['bg-ground'] || 'assets/background.jpg');
+      this.load.image('bg-rocky', inline['bg-rocky'] || 'assets/rocky-hill-16x9.jpg');
+      this.load.image('bg-sea', inline['bg-sea'] || 'assets/blue-sea-16x9.jpg');
       Object.keys(BALLS).forEach((name) => {
         this.load.image('ball-' + name, inline['ball-' + name] || ('assets/balls/' + name + '.png'));
       });
@@ -410,6 +432,7 @@
       }
       makeSparkTexture(this);
       makeShadowTexture(this);
+      makeHaloTexture(this);
       // only keep species whose art actually arrived
       ACTIVE = ROSTER.filter(p => this.textures.exists('poke-' + p.id));
       if (!ACTIVE.length) {
@@ -427,7 +450,8 @@
     constructor() { super('Menu'); }
 
     create() {
-      drawMeadow(this);
+      let chosen = loadMapChoice();
+      const backdrop = drawMeadow(this, chosen);
       const st = loadState();
 
       // mascot: a Pokémon bobbing on the grass
@@ -469,7 +493,6 @@
       const bx = W * 0.42;
 
       // ---- which map the round is played on, picked before it starts
-      let chosen = loadMapChoice();
       const chipY = 292, chipW = 140, chipH = 46, gap = 10;
       const total = MAP_ORDER.length * chipW + (MAP_ORDER.length - 1) * gap;
       const blurb = label(this, bx, 340, MAPS[chosen].blurb, 16, C.ink, true)
@@ -504,6 +527,10 @@
           chosen = key;
           saveMapChoice(key);
           paintChips();
+          // show them where they are going before they press PLAY
+          if (backdrop && MAPS[key].bg && this.textures.exists(MAPS[key].bg)) {
+            backdrop.setTexture(MAPS[key].bg);
+          }
           this.tweens.add({ targets: chips[key].t, scale: 1.12, duration: 90, yoyo: true });
         });
       });
@@ -742,7 +769,7 @@
     }
 
     create() {
-      drawMeadow(this);
+      drawMeadow(this, this.chosenMap);
 
       this.score = 0;
       this.caughtCount = 0;
@@ -760,6 +787,10 @@
       // The pool can never be empty: the default map catches anything left over.
       this.pool = ACTIVE.filter((p) => mapForTypes(p.types) === this.chosenMap);
       if (!this.pool.length) this.pool = ACTIVE.slice();
+
+      // Each drawing puts its ground at a different height, so the band where
+      // Pokémon may appear comes from the map, not from one global value.
+      this.field = MAPS[this.chosenMap].field || { top: CFG.fieldTop, bottom: CFG.fieldBottom };
       this.thrownSpeed = 0;
       this.ballHits = new Set();     // Pokémon this throw has already bounced off
 
@@ -1120,21 +1151,30 @@
       } else {
         x = Phaser.Math.Between(CFG.fieldLeft + 70, CFG.fieldRight - 70);
       }
-      const y = Phaser.Math.Between(CFG.fieldTop, CFG.fieldBottom);
+      const y = Phaser.Math.Between(this.field.top, this.field.bottom);
 
       const dir = Math.random() < 0.5 ? -1 : 1;
 
       // Farther up the field = a bit smaller, so the row does not read as a
       // flat line of stickers.
-      const depth = 0.80 + ((y - CFG.fieldTop) / (CFG.fieldBottom - CFG.fieldTop)) * 0.25;
+      const depth = 0.80 + ((y - this.field.top) / (this.field.bottom - this.field.top)) * 0.25;
       const size = Math.round(CFG.spriteSize * depth);
 
+      const halo = this.add.image(0, 0, 'halo')
+        .setDisplaySize(size * 1.45, size * 1.45)
+        .setAlpha(0.38);
       const shadow = this.add.image(0, size * 0.46, 'shadow').setDisplaySize(size * 0.84, size * 0.22);
       const img = this.add.image(0, 0, 'poke-' + spec.id)
         .setDisplaySize(size, size)
         .setFlipX(dir < 0);
 
-      const box = this.add.container(x, y, [shadow, img]).setDepth(10);
+      // A cream outline separates a grey rock Pokémon from the grey mountain it
+      // stands on. WebGL only; the halo above is the fallback when FX is absent.
+      try {
+        if (img.preFX) img.preFX.addGlow(0xfff8e7, 5, 0, false);
+      } catch (e) { /* canvas renderer: halo only */ }
+
+      const box = this.add.container(x, y, [halo, shadow, img]).setDepth(10);
       // They appear with a quick pop and then stay put.
       box.setScale(0.01);
       this.tweens.add({ targets: box, scale: 1, duration: 220, ease: 'Back.out' });

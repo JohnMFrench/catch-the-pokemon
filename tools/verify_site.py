@@ -26,6 +26,8 @@ STATIC = [
     "vendor/phaser.min.js",
     "assets/fonts/Fredoka.ttf",
     "assets/background.jpg",
+    "assets/rocky-hill-16x9.jpg",
+    "assets/blue-sea-16x9.jpg",
     "assets/player.png",
     "assets/janbob_name.png",
 ]

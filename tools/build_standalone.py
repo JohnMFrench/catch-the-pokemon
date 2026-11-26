@@ -62,11 +62,16 @@ def main() -> None:
 
     # the hand-drawn backdrop is optional: the game falls back to the
     # code-drawn meadow when it is missing
-    bg = ROOT / "assets" / "background.jpg"
-    if bg.exists():
-        items.append('"bg":"data:image/jpeg;base64,' + b64(bg.read_bytes()) + '"')
-    else:
-        print("note: no assets/background.jpg - using the code-drawn meadow")
+    bgs = {
+        "bg-ground": ROOT / "assets" / "background.jpg",
+        "bg-rocky": ROOT / "assets" / "rocky-hill-16x9.jpg",
+        "bg-sea": ROOT / "assets" / "blue-sea-16x9.jpg",
+    }
+    for key, path in bgs.items():
+        if path.exists():
+            items.append(f'"{key}":"data:image/jpeg;base64,' + b64(path.read_bytes()) + '"')
+        else:
+            print(f"note: no {path.name} - that map falls back to the meadow")
 
     # hand-drawn balls: assets/balls/<colour>.png -> "ball-<colour>"
     balls = sorted((ROOT / "assets" / "balls").glob("*.png"))

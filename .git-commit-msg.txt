@@ -1,17 +1,21 @@
-Three maps, chosen before the round
+Rocky Hill and Blue Sea art, wired to their maps
 
-Ground & Sky (default), Rocky Hill and Blue Sea. The picker sits on the menu
-above PLAY: three chips, the chosen one lit, with a line under it naming what
-lives there. The choice is remembered in localStorage and passed to GameScene,
-which builds its spawn pool from that map only. The map name shows in the HUD.
+Both sheets came in as photos of crayon drawings on a wooden table, so they go
+through the same builder as the meadow: tools/build_bg.py now takes --src,
+--out16 and --bias, and produces a rectified, white-balanced 16:9 backdrop.
 
-Species are assigned by type in mapForTypes(), checked sea -> hill -> default,
-so a Water/Flying Pokémon is a sea creature and the default map catches
-everything else. That keeps the Pokédex fillable: 38 ground, 13 sea, 7 rocky.
+Bias (how much of the crop comes off the top) was chosen from side-by-side
+crops: 0.2 for the hill keeps sun, peak and rocky ground; 0.3 for the sea keeps
+sun, horizon and waves. The drawings are 1.27:1 against a 1.78:1 canvas, so a
+third of the height has to go somewhere — this is where it went.
 
-Rocky Hill only had Onix, so it also gets Sandshrew, Diglett, Geodude, Graveler,
-Golem and Cubone (all Gen 1) with the usual two facts each. 58 species total,
-and the dex grid handles the wider roster at 10 columns.
+Because the ground sits at a different height in each drawing, the spawn band is
+now per map (field: in MAPS): 294-430 meadow, 405-545 hill, 410-540 sea. The
+depth scale uses the same per-map band.
 
-Backgrounds are still the crayon meadow on all three maps; drawMeadow() is the
-one place to branch when the new art exists.
+Grey rock creatures on a grey mountain were unreadable, so each Pokémon gets a
+cream glow outline (Phaser FX) with a soft radial halo behind it as the
+non-WebGL fallback.
+
+The menu now shows the selected map's backdrop and swaps it when you change the
+chips, so you can see where you're going before pressing PLAY.

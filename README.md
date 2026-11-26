@@ -185,9 +185,26 @@ default map takes the leftovers (38 of the 58), which is what keeps the Pokédex
 fillable — a strict "normal and flying only" default would have made two thirds
 of the roster uncatchable.
 
-**Backgrounds are still the crayon meadow for all three.** When the Rocky Hill
-and Blue Sea drawings exist, drop them in `assets/` and branch on the map key in
-`drawMeadow()` — the plumbing already knows which map is running.
+Each map draws its own sheet photo through `tools/build_bg.py`, which rectifies
+the paper out of the photo, white-balances on the unpainted paper, and crops to
+16:9:
+
+    python3 tools/build_bg.py --src assets/rocky-hill.jpg --out16 assets/rocky-hill-16x9.jpg --bias 0.2
+    python3 tools/build_bg.py --src assets/blue-sea.jpg   --out16 assets/blue-sea-16x9.jpg   --bias 0.3
+
+`--bias` is how much of the crop's lost height comes off the top: 0 keeps all the
+sky, 1 keeps all the ground. The drawings are 1.27:1 and the canvas is 1.78:1, so
+something has to go — 0.2 keeps the sun, the peak and the rocky ground for the
+hill, and 0.3 keeps the sun and the horizon for the sea. Those numbers were
+picked by eye from side-by-side crops, so re-check them if a sheet is redrawn.
+
+Because each drawing puts its ground at a different height, the band Pokémon
+spawn in belongs to the map (`field:` in `MAPS`), not to one global value:
+294–430 on the meadow, 405–545 on the hill, 410–540 on the sea.
+
+Grey rock creatures on a grey mountain vanished into the art, so every Pokémon
+now gets a cream glow outline (Phaser FX, WebGL) plus a soft halo behind it (the
+fallback when FX isn't available).
 
 ## The Pokédex
 

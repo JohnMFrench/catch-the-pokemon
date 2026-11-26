@@ -146,12 +146,20 @@ def save_jpeg(path, img, quality):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--preview", metavar="OUTDIR", help="write diagnostic images here")
+    # Default behaviour builds the meadow from assets/custom/img/bg.jpg. Point
+    # --src/--out16 at another sheet to get just its 16:9 backdrop.
+    ap.add_argument("--src", default=SRC, help="photo of the drawing (default: the meadow)")
+    ap.add_argument("--out16", metavar="PATH", help="write only this 16:9 file")
+    ap.add_argument("--bias", type=float, default=0.0,
+                    help="fraction of the 16:9 crop's lost height taken from the TOP "
+                         "(0 = keep the sky, 1 = keep the ground)")
     args = ap.parse_args()
+    src = args.src
 
     from PIL import Image
     # PIL on purpose: cv2.imread() honours this file's EXIF orientation tag (6) and
     # would rotate it a quarter turn. The stored pixels are already upright.
-    img = cv2.cvtColor(np.asarray(Image.open(SRC).convert("RGB")), cv2.COLOR_RGB2BGR)
+    img = cv2.cvtColor(np.asarray(Image.open(src).convert("RGB")), cv2.COLOR_RGB2BGR)
     print("source %dx%d" % (img.shape[1], img.shape[0]))
 
     quad = find_sheet(img)
@@ -180,13 +188,20 @@ def main():
           % (100 * clip.mean(), 100 * clip[chroma >= 30].mean() if (chroma >= 30).any() else 0))
 
     # ---- outputs
-    save_jpeg(os.path.join(OUT, "bg_art.jpg"), clean, 92)
-
     t, b, l, r = rim
     art_cropped = art[t:art.shape[0] - b, l:art.shape[1] - r]
     h16 = int(round(clean.shape[1] / (16 / 9)))
-    y0 = 0 if CROP_TOP_ALIGNED else (clean.shape[0] - h16) // 2
+    spare = clean.shape[0] - h16
+    y0 = int(round(max(0, spare) * max(0.0, min(1.0, args.bias))))
     cover = clean[y0:y0 + h16]
+    print("16:9 crop from y=%d of %d spare px (bias %.2f from top)" % (y0, spare, args.bias))
+
+    if args.out16:
+        save_jpeg(args.out16,
+                  cv2.resize(cover, (1920, 1080), interpolation=cv2.INTER_AREA), 90)
+        return
+
+    save_jpeg(os.path.join(OUT, "bg_art.jpg"), clean, 92)
     save_jpeg(os.path.join(OUT, "bg_art_16x9.jpg"),
               cv2.resize(cover, (1920, 1080), interpolation=cv2.INTER_AREA), 90)
 
