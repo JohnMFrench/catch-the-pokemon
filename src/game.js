@@ -58,6 +58,15 @@
     white: '#ffffff'
   };
 
+  // Type chip colours, roughly the ones the games use.
+  const TYPE_COLOURS = {
+    Normal: 0xa8a77a, Fire: 0xf08030, Water: 0x6390f0, Grass: 0x7ac74c,
+    Electric: 0xf6d02f, Ice: 0x96d9d6, Fighting: 0xc22e28, Poison: 0xa33ea1,
+    Ground: 0xe2bf65, Flying: 0xa98ff3, Psychic: 0xf95587, Bug: 0xa6b91a,
+    Rock: 0xb6a136, Ghost: 0x735797, Dragon: 0x6f35fc, Dark: 0x705746,
+    Steel: 0xb7b7ce, Fairy: 0xd685ad
+  };
+
   // Hand-drawn balls, cut from the crayon sheet by tools/build_balls.py.
   // Purely cosmetic: they all score the same, they just cycle on every throw
   // (poké -> great -> master -> poké ...). Insertion order IS the cycle order.
@@ -78,7 +87,7 @@
   }
 
   function loadState() {
-    const base = { board: [], caught: [] };
+    const base = { board: [], caught: [], caughtAt: {} };
     try {
       const parsed = JSON.parse(localStorage.getItem(CFG.storeKey) || 'null');
       if (!parsed) return base;
@@ -86,7 +95,9 @@
         board: Array.isArray(parsed.board)
           ? parsed.board.filter(e => e && typeof e.score === 'number' && typeof e.name === 'string')
           : [],
-        caught: Array.isArray(parsed.caught) ? parsed.caught.filter(n => typeof n === 'number') : []
+        caught: Array.isArray(parsed.caught) ? parsed.caught.filter(n => typeof n === 'number') : [],
+        // id -> timestamp of the first catch; older saves simply have none
+        caughtAt: (parsed.caughtAt && typeof parsed.caughtAt === 'object') ? parsed.caughtAt : {}
       };
     } catch (e) { return base; }
   }
@@ -484,7 +495,8 @@
       panel.strokeRoundedRect(70, 40, W - 140, H - 80, 30);
 
       label(this, W / 2, 84, 'Pokédex', 40, C.red, true);
-      label(this, W / 2, 120, caught.length + ' of ' + ACTIVE.length + ' caught', 22, C.ink, true).setAlpha(0.65);
+      label(this, W / 2, 120, caught.length + ' of ' + ACTIVE.length + ' caught  ·  tap one to read its entry',
+        21, C.ink, true).setAlpha(0.65);
 
       // Geometry adapts to the roster: 8 columns wide, as many rows as it
       // takes, cells shrinking so the last row stays clear of the Back button.
@@ -506,11 +518,134 @@
         const img = this.add.image(x, y, 'poke-' + p.id).setDisplaySize(imgSize, imgSize);
         if (!got) img.setTint(0x3b4f5b).setAlpha(0.28);
         label(this, x, y + ch * 0.36, got ? p.name : '???', nameSize, got ? C.ink : '#7c8c95', got).setAlpha(got ? 1 : 0.7);
+
+        // Zone, not a container: that is the thing that reliably takes a finger.
+        const zone = this.add.zone(x, y + ch * 0.02, cw * 0.94, ch * 0.9)
+          .setOrigin(0.5)
+          .setInteractive({ useHandCursor: true });
+        zone.on('pointerover', () => img.setScale(img.scale * 1.08));
+        zone.on('pointerout', () => img.setDisplaySize(imgSize, imgSize));
+        zone.on('pointerdown', () => this.scene.start('DexEntry', { id: p.id }));
       });
 
       makeButton(this, W / 2, H - 74, 240, 58, 'Back', C.yellowNum, () => this.scene.start('Menu'));
       this.input.keyboard.once('keydown-ESC', () => this.scene.start('Menu'));
       this.input.keyboard.once('keydown-ENTER', () => this.scene.start('Menu'));
+    }
+  }
+
+  // ======================================================== Pokédex entry
+  // One species, full screen, drawn as an actual Pokédex unit: red body, blue
+  // lens, cream screen. Big art and identity on top, two facts underneath.
+  class DexEntryScene extends Phaser.Scene {
+    constructor() { super('DexEntry'); }
+
+    init(data) { this.speciesId = data && data.id; }
+
+    create() {
+      drawMeadow(this);
+      dim(this);
+
+      const spec = ROSTER.find(r => r.id === this.speciesId);
+      if (!spec) { this.scene.start('Dex'); return; }
+
+      const st = loadState();
+      const got = st.caught.indexOf(spec.id) !== -1;
+      const caughtAt = got ? st.caughtAt[spec.id] : 0;
+
+      // ---------------------------------------------------------- the device
+      const body = this.add.graphics();
+      body.fillStyle(0x9e3016, 1);
+      body.fillRoundedRect(78, 38, 1124, 606, 30);
+      body.fillStyle(C.redNum, 1);
+      body.fillRoundedRect(80, 40, 1120, 596, 28);
+      body.lineStyle(5, C.inkNum, 1);
+      body.strokeRoundedRect(80, 40, 1120, 596, 28);
+
+      // lens and status LEDs along the top edge
+      const lens = this.add.graphics();
+      lens.fillStyle(0x2f6fa8, 1);
+      lens.fillCircle(146, 92, 27);
+      lens.fillStyle(0x76c4f2, 1);
+      lens.fillCircle(146, 92, 20);
+      lens.fillStyle(0xffffff, 0.75);
+      lens.fillCircle(139, 85, 7);
+      lens.lineStyle(5, C.inkNum, 1);
+      lens.strokeCircle(146, 92, 27);
+      [0xd6453a, 0xffc93c, 0x7ac74c].forEach((c, i) => {
+        lens.fillStyle(c, 1);
+        lens.fillCircle(200 + i * 30, 92, 9);
+        lens.lineStyle(4, C.inkNum, 1);
+        lens.strokeCircle(200 + i * 30, 92, 9);
+      });
+      label(this, 1150, 92, 'POKÉDEX', 23, C.creamNum, true).setOrigin(1, 0.5).setAlpha(0.85);
+
+      // the screen
+      const screen = this.add.graphics();
+      screen.fillStyle(0xfff8e7, 1);
+      screen.fillRoundedRect(120, 132, 1040, 468, 18);
+      screen.lineStyle(6, C.inkNum, 1);
+      screen.strokeRoundedRect(120, 132, 1040, 468, 18);
+
+      // ------------------------------------------------------------- the art
+      this.add.circle(290, 300, 132, 0xefe3cb, 1);
+      const art = this.add.image(290, 300, 'poke-' + spec.id).setDisplaySize(240, 240);
+      if (!got) art.setTint(0x3b4f5b).setAlpha(0.3);
+
+      // -------------------------------------------------------- the identity
+      label(this, 430, 200, got ? spec.name : '???', 46, C.ink, true).setOrigin(0, 0.5);
+
+      if (got) {
+        let cx = 430;
+        spec.types.forEach((t) => {
+          const chip = this.add.graphics();
+          const tw = t.length * 12 + 32;
+          chip.fillStyle(TYPE_COLOURS[t] || 0x888888, 1);
+          chip.fillRoundedRect(cx, 218, tw, 34, 17);
+          chip.lineStyle(3, 0x22333d, 0.25);
+          chip.strokeRoundedRect(cx, 218, tw, 34, 17);
+          label(this, cx + tw / 2, 235, t, 18, '#ffffff', true).setOrigin(0.5);
+          cx += tw + 10;
+        });
+
+        label(this, 430, 292, spec.h.toFixed(1) + ' m tall   ·   ' + spec.w.toFixed(1) + ' kg',
+          20, C.ink).setOrigin(0, 0.5).setAlpha(0.8);
+
+        const when = caughtAt
+          ? new Date(caughtAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
+          : null;
+        label(this, 430, 326, when ? ('First caught ' + when) : 'This one is in your Pokédex',
+          17, '#5d7078').setOrigin(0, 0.5);
+      } else {
+        label(this, 430, 244, 'Not caught yet', 26, C.ink, true).setOrigin(0, 0.5).setAlpha(0.7);
+        label(this, 430, 288, 'Catch it to unlock this entry!', 21, '#5d7078').setOrigin(0, 0.5);
+      }
+
+      // --------------------------------------------------------------- facts
+      const line = this.add.graphics();
+      line.lineStyle(2, 0x22333d, 0.12);
+      line.lineBetween(150, 430, 1130, 430);
+
+      const factStyle = {
+        fontFamily: FONT, fontSize: '19px', color: C.ink,
+        wordWrap: { width: 455, useAdvancedWrap: true }, lineSpacing: 6
+      };
+
+      if (got) {
+        label(this, 150, 458, 'IN THE GAME', 14, C.red, true).setOrigin(0, 0.5).setAlpha(0.9);
+        this.add.text(150, 476, spec.dex, factStyle);
+
+        label(this, 660, 458, 'IN REAL LIFE', 14, C.blue, true).setOrigin(0, 0.5).setAlpha(0.9);
+        this.add.text(660, 476, spec.real, factStyle);
+      } else {
+        label(this, W / 2, 490, 'Its facts are a secret until you catch one.', 22, '#5d7078').setOrigin(0.5);
+      }
+
+      const back = makeButton(this, W / 2, 672, 210, 54, 'Back', C.yellowNum, () => this.scene.start('Dex'));
+      back.container.setDepth(60);
+      back.zone.setDepth(60);
+      this.input.keyboard.once('keydown-ESC', () => this.scene.start('Dex'));
+      this.input.keyboard.once('keydown-ENTER', () => this.scene.start('Dex'));
     }
   }
 
@@ -998,6 +1133,7 @@
         const saved = loadState();
         if (saved.caught.indexOf(pk.id) === -1) {
           saved.caught.push(pk.id);
+          saved.caughtAt[pk.id] = Date.now();
           saveState(saved);
         }
       }
@@ -1331,7 +1467,7 @@
       height: H
     },
     render: { antialias: true, roundPixels: false },
-    scene: [BootScene, MenuScene, DexScene, GameScene]
+    scene: [BootScene, MenuScene, DexScene, DexEntryScene, GameScene]
   };
 
   function start() {

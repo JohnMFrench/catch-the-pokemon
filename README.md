@@ -160,6 +160,24 @@ update `JANBOB_HAND` to match or the ball will slide off his hand.
 If `assets/player.png` is missing the game falls back to the old sling pad and
 draws no character, so nothing breaks.
 
+## The Pokédex
+
+Menu → **Pokédex** → tap any Pokémon for a full-screen entry, drawn as the
+device itself: red body, blue lens, cream screen. Each entry has large art, type
+chips, real height and weight (pulled from PokeAPI), the date you first caught
+it, and two facts — one from the games, one real-world science tied to the same
+idea: electric eels for Pikachu, spider silk for Scizor, owl feathers for Rowlet,
+keratin for Litten, invasive species for Gyarados.
+
+Anything not caught yet opens as a silhouette: "Catch it to unlock this entry!",
+and its facts stay hidden.
+
+Facts live in `src/roster.js` beside each species (`dex:` = in-world, `real:` =
+real world), so adding a Pokémon means adding all of its data in one place.
+`tools/dexdata.json` keeps the height/weight/types that came back from PokeAPI.
+The entry screen is the `DexEntry` scene in `src/game.js`; first-catch dates are
+stored in `localStorage` under `caughtAt`, keyed by species id.
+
 ## Tuning
 
 The knobs are the `CFG` block at the top of `src/game.js` — no magic numbers
