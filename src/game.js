@@ -804,6 +804,18 @@
       // Each drawing puts its ground at a different height, so the band where
       // Pokémon may appear comes from the map, not from one global value.
       this.field = MAPS[this.chosenMap].field || { top: CFG.fieldTop, bottom: CFG.fieldBottom };
+
+      // Which columns sit nearest the middle of the screen. They spawn higher up
+      // the band than the outer ones (see spawnPokemon), because a throw aimed at
+      // an outer column passes straight through the inner ones otherwise.
+      const cols = CFG.maxOnScreen;
+      const span = (CFG.fieldRight - CFG.fieldLeft) / cols;
+      this.innerCols = new Set(
+        [...Array(cols).keys()]
+          .sort((a, b) => Math.abs(CFG.fieldLeft + span * (a + 0.5) - W / 2) -
+                          Math.abs(CFG.fieldLeft + span * (b + 0.5) - W / 2))
+          .slice(0, 2)
+      );
       this.thrownSpeed = 0;
       this.ballHits = new Set();     // Pokémon this throw has already bounced off
 
@@ -1183,17 +1195,28 @@
         if (!taken) free.push(c);
       }
 
-      let x;
+      let x, col;
       if (free.length) {
-        const cx = CFG.fieldLeft + span * (free[Math.floor(Math.random() * free.length)] + 0.5);
+        col = free[Math.floor(Math.random() * free.length)];
+        const cx = CFG.fieldLeft + span * (col + 0.5);
         x = Phaser.Math.Clamp(
           cx + Phaser.Math.Between(-span * 0.3, span * 0.3),
           CFG.fieldLeft + 70, CFG.fieldRight - 70
         );
       } else {
         x = Phaser.Math.Between(CFG.fieldLeft + 70, CFG.fieldRight - 70);
+        col = Phaser.Math.Clamp(Math.floor((x - CFG.fieldLeft) / span), 0, cols - 1);
       }
-      const y = Phaser.Math.Between(this.field.top, this.field.bottom);
+
+      // The two middle columns start higher up the band and the two outer ones
+      // stay lower, so the inner pair cannot sit in front of an outer pair's
+      // throwing line. The bands overlap in the middle, which keeps a row of
+      // four from reading as two neat shelves.
+      const h = this.field.bottom - this.field.top;
+      const inner = this.innerCols.has(col);
+      const bandLo = this.field.top + (inner ? 0 : 0.38 * h);
+      const bandHi = this.field.top + (inner ? 0.62 * h : h);
+      const y = Math.round(Phaser.Math.Between(bandLo, bandHi));
 
       const dir = Math.random() < 0.5 ? -1 : 1;
 
