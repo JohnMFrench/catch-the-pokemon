@@ -10,6 +10,9 @@
 html, body {
   margin: 0;
   height: 100%;
+  /* dvh follows the iPhone URL bar as it collapses; 100% does not, so the canvas
+     gets clipped by a strip at the bottom until the bar hides. */
+  height: 100dvh;
   overflow: hidden;
   background: #16262f;
   color: #22333d;
@@ -29,8 +32,8 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 /* ---------- fullscreen ---------- */
 #fsBtn {
   position: fixed;
-  bottom: 10px;
-  right: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
   z-index: 30;
   padding: 6px 12px;
   border-radius: 999px;
@@ -44,6 +47,21 @@ button { font-family: inherit; cursor: pointer; border: 0; background: none; col
 }
 #fsBtn:hover { opacity: 1; }
 #fsBtn:active { transform: scale(0.95); }
+#fsBtn[hidden] { display: none; }
+
+/* ---------- fullscreen help (iOS: no Fullscreen API) ---------- */
+#fsHelp { z-index: 40; }
+#fsHelp .card { max-width: 520px; }
+#fsHelp .fssteps {
+  margin: 14px 0 4px;
+  padding-left: 26px;
+  text-align: left;
+  font-size: 17px;
+  line-height: 1.5;
+  color: #22333d;
+}
+#fsHelp .fssteps li { margin-bottom: 8px; }
+#fsHelp .fssteps strong { color: #1f6f43; }
 
 /* ---------- results overlay ---------- */
 .overlay {

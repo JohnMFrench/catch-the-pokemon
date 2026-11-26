@@ -1411,26 +1411,22 @@
         onComplete: () => ring.destroy()
       });
 
-      // +points, gold for a normal catch and green for a nice throw
-      const pop = label(this, x, y - 40, '+' + this.throwScore, 44,
-                        this.throwNice ? 0x3ddc84 : C.yellow, true)
-        .setStroke(C.ink, 7).setDepth(37);
+      // One line, never two stacked: a separate NICE THROW! label collided with
+      // the +points above it and both became unreadable. White with a thick
+      // dark-green stroke is the only fill that survives both the green meadow
+      // and the brown dark path; gold stays for an ordinary catch.
+      const popText = this.throwNice ? 'NICE THROW!  +' + this.throwScore : '+' + this.throwScore;
+      const pop = label(this, x, y - 40, popText, this.throwNice ? 38 : 44,
+                        this.throwNice ? C.white : C.yellow, true)
+        .setStroke(this.throwNice ? 0x14532d : C.ink, this.throwNice ? 9 : 7)
+        .setDepth(38);
       this.tweens.add({
-        targets: pop, y: y - 120, alpha: 0, duration: 850, ease: 'Quad.out',
+        targets: pop, y: y - 128, alpha: 0, duration: 950, ease: 'Quad.out',
         onComplete: () => pop.destroy()
       });
 
-      if (this.throwNice) {
-        const nice = label(this, x, y - 62, 'NICE THROW!', 30, 0x3ddc84, true)
-          .setStroke(C.ink, 6).setDepth(38);
-        this.tweens.add({
-          targets: nice, y: y - 150, alpha: 0, duration: 1000, ease: 'Quad.out',
-          onComplete: () => nice.destroy()
-        });
-      }
-
       if (isNew) {
-        const tag = label(this, x, y - 100, 'NEW!', 32, C.white, true)
+        const tag = label(this, x, y - 96, 'NEW!', 30, C.white, true)
           .setStroke(C.red, 6).setDepth(37);
         this.tweens.add({
           targets: tag, y: y - 160, alpha: 0, duration: 1100, ease: 'Quad.out',
@@ -1704,15 +1700,51 @@
     if (e.key === 'Escape' && overlay.classList.contains('show')) window.PokeCatch.toMenu();
   });
 
-  document.getElementById('fsBtn').addEventListener('click', function () {
+  // ------------------------------------------------------------- fullscreen
+  // iPhone Safari has no Fullscreen API at all, and iPad Safari has it but can
+  // refuse. A button that silently does nothing is the worst answer, so when
+  // the API is missing the same button explains how to get a chrome-less game:
+  // Add to Home Screen. Launched that way the page reports standalone, and the
+  // apple-mobile-web-app-capable tags in the head do the rest.
+  (function () {
     const el = document.documentElement;
-    if (document.fullscreenElement || document.webkitFullscreenElement) {
-      (document.exitFullscreen || document.webkitExitFullscreen).call(document);
-    } else {
-      const req = el.requestFullscreen || el.webkitRequestFullscreen;
-      if (req) req.call(el).catch(() => {});
+    const btn = document.getElementById('fsBtn');
+    const help = document.getElementById('fsHelp');
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    const isIOS = /iP(hone|ad|od)/.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const standalone = navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+    const openHelp = () => { help.classList.add('show'); };
+    const closeHelp = () => { help.classList.remove('show'); };
+
+    if (standalone) {
+      // already takes the whole screen: nothing to toggle
+      btn.hidden = true;
+    } else if (!req) {
+      btn.textContent = isIOS ? 'Full screen?' : 'Fullscreen';
+      btn.setAttribute('aria-label', 'How to play fullscreen');
     }
-  });
+
+    btn.addEventListener('click', function () {
+      const shown = document.fullscreenElement || document.webkitFullscreenElement;
+      if (shown) {
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) exit.call(document);
+        return;
+      }
+      if (!req) { openHelp(); return; }
+      try {
+        const out = req.call(el);
+        if (out && out.catch) out.catch(openHelp);
+      } catch (e) { openHelp(); }
+    });
+
+    document.getElementById('fsHelpClose').addEventListener('click', closeHelp);
+    help.addEventListener('click', (e) => { if (e.target === help) closeHelp(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHelp(); });
+  })();
 
   // ------------------------------------------------------------ launch it
   const config = {

@@ -55,6 +55,24 @@ scripts, so the LAN URL is the reliable route on an iPhone).
 Mouse and touch both work. On a phone, turn it sideways (there's a hint if you
 forget). The Fullscreen button is bottom-right.
 
+**iPhone has no Fullscreen API**, so on Safari the button cannot do what it does
+on a desktop or on Android — iPhone Safari does not expose
+`Element.requestFullscreen` at all (iPad Safari does, and can still refuse). Rather
+than leave a dead control, the button detects the missing API and explains the
+one route to a chrome-less game: Share → **Add to Home Screen**. Launched from the
+Home Screen the page reports `navigator.standalone`, the
+`apple-mobile-web-app-capable` / `status-bar-style: black-translucent` tags in
+`index.html` drop the browser furniture, and the button hides itself because
+there is nothing left to toggle. Two supporting bits matter there:
+
+- `html, body { height: 100dvh }` — `100%` does not follow the URL bar as it
+  collapses, so the canvas keeps a strip of itself under it.
+- `env(safe-area-inset-*)` on the floating button, plus `viewport-fit=cover`
+  already in the head, so it clears the notch and the home indicator.
+
+The layout is unchanged on desktop: with the API present the button enters and
+exits fullscreen exactly as before (verified both ways).
+
 ## Rules
 
 | | |
