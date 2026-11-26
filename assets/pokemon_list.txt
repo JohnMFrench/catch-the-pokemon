@@ -1,0 +1,10 @@
+charmander
+pikachu
+gyrados
+onyx
+mewtwo
+mew
+magikarp
+squirtle
+wailord
+

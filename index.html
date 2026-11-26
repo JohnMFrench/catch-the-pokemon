@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#16262f">
+<meta name="description" content="A 120-second browser game: sling a Pok&eacute;ball, catch Pokémon, fill the Pokédex.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='29' fill='%23fff' stroke='%2322333d' stroke-width='4'/%3E%3Cpath d='M3 32a29 29 0 0 1 58 0Z' fill='%23e4572e'/%3E%3Crect x='3' y='29' width='58' height='6' fill='%2322333d'/%3E%3Ccircle cx='32' cy='32' r='9' fill='%23fff' stroke='%2322333d' stroke-width='4'/%3E%3C/svg%3E">
+<title>Catch the Pokémon</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="game"></div>
+
+<button id="fsBtn" type="button" aria-label="Toggle fullscreen">Fullscreen</button>
+
+<div id="endOverlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+  <div class="card">
+    <h1 id="endTitle">Time&rsquo;s up!</h1>
+    <p class="lede">You caught <strong id="endCount">0</strong> Pokémon</p>
+    <div class="bigscore" id="endScore">0</div>
+    <p class="record" id="endRecord"></p>
+    <p class="newline" id="endNew"></p>
+
+    <form id="nameForm" class="nameform">
+      <label for="nameInput">Save your score &mdash; what&rsquo;s your name?</label>
+      <div class="row">
+        <input id="nameInput" type="text" maxlength="10" autocomplete="off" spellcheck="false" enterkeyhint="done">
+        <button type="submit" class="btn primary">Save</button>
+      </div>
+    </form>
+
+    <ol id="board" class="board" aria-live="polite"></ol>
+
+    <div class="endbtns">
+      <button type="button" id="againBtn" class="btn primary">Play again</button>
+      <button type="button" id="menuBtn" class="btn">Menu</button>
+    </div>
+  </div>
+</div>
+
+<div id="rotate">
+  <div>
+    <span class="phone" aria-hidden="true"></span>
+    Turn your phone sideways to play
+  </div>
+</div>
+
+<script src="vendor/phaser.min.js"></script>
+<script src="src/roster.js"></script>
+<script src="src/game.js"></script>
+</body>
+</html>
