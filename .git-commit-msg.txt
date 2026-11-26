@@ -1,0 +1,8 @@
+Ball bounces off the grass instead of dying
+
+A sling pulled the wrong way fires at the ground and comes back up instead of
+being lost. Each bounce damps to 0.68 (tuned so a firm backward sling reaches
+the low Pokémon band), keeps 0.88 of its sideways speed, and cools the throw:
+thrownSpeed drops 40% per bounce, so a ball that has hit the ground is no longer
+"too hot" to catch. It settles and returns after 6 bounces or when the bounce
+dies out, with a dust ring on contact.

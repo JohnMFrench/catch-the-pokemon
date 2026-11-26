@@ -46,6 +46,10 @@ scripts, so the LAN URL is the reliable route on an iPhone).
 - Pull it **nearly all the way back** and the dotted arc turns **red**: that
   throw is too fast, the ball bounces off and the Pokémon says *Oof!*. The
   threshold is ~90% of a full pull, so only a hard yank bounces.
+- A bad throw is not wasted: the ball **bounces off the grass** and comes back
+  up, and each bounce takes the heat out of the throw, so a ball that has hit
+  the ground can still catch. Pulling the sling the wrong way (up) fires it at
+  the ground — and it comes back.
 - `Esc` ends a round early.
 
 Mouse and touch both work. On a phone, turn it sideways (there's a hint if you
@@ -195,6 +199,9 @@ buried in the logic:
     launchK        6.0     pull distance -> launch speed (170*6 = 1020 max)
     bounceSpeed    920     launch speed that bounces instead of catching (~90%)
     tapPoints      25      what a tap-to-throw catch is worth
+    groundY        682     grass line the ball bounces off
+    bounceDamp     0.68    share of speed a bounce keeps (tuned to reach the band)
+    bounceFriction 0.88    share of sideways speed a bounce keeps
     fieldTop       294     highest a Pokémon can spawn (5% of screen above 330)
     gravity        340     arc of the ball
     spriteSize     142     base on-screen size (farther up = smaller)

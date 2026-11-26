@@ -26,6 +26,12 @@
     // you have to yank it right back for the ball to be too hot to hold.
     bounceSpeed: 920,
     gravity: 340,          // gentle arc, easy to aim
+    // The ball bounces off the ground instead of being lost, so a sling pulled
+    // the wrong way still gets a second chance. groundY is where the ball's
+    // centre meets the grass; damping is what is left of the speed.
+    groundY: 682,
+    bounceDamp: 0.68,      // enough left to reach the low Pokémon band again
+    bounceFriction: 0.88,
     // Where Pokémon are allowed to appear. Measured against the drawing: the
     // crayon grass starts at y~363 and Janbob's head tops out around y~510, so
     // this band puts their feet on the meadow (roughly y 395-495) instead of
@@ -917,6 +923,7 @@
       this.throwKind = kind || 'sling';
       this.throwScore = this.throwKind === 'tap' ? CFG.tapPoints : CFG.pointsPerCatch;
       this.thrownSpeed = pull.len * CFG.launchK;
+      this.bounces = 0;
       this.ballHits.clear();
       // next ball in the cycle goes into your hand once this one lands
       this.ballIndex = (this.ballIndex + 1) % this.ballKeys.length;
@@ -1079,6 +1086,24 @@
       this.ball.y += this.ballVY * dt;
       this.ball.angle += this.ballSpin * dt;
 
+      // Ground: bounce, do not die. Each bounce also takes the heat out of the
+      // throw, so a ball that has hit the grass is no longer "too hot" to catch.
+      if (this.ball.y > CFG.groundY && this.ballVY > 0) {
+        this.ball.y = CFG.groundY;
+        this.ballVY = -this.ballVY * CFG.bounceDamp;
+        this.ballVX *= CFG.bounceFriction;
+        this.ballSpin *= -0.6;
+        this.thrownSpeed *= 0.6;
+        this.bounces += 1;
+        this.dustPuff(this.ball.x, CFG.groundY + 10);
+
+        // lost its bounce: take it back rather than let it roll about forever
+        if (Math.abs(this.ballVY) < 170 || this.bounces > 6) {
+          this.resetBall(320);
+          return;
+        }
+      }
+
       for (let i = 0; i < this.pokemon.length; i++) {
         const pk = this.pokemon[i];
         if (pk.caught || !pk.box.active || this.ballHits.has(pk)) continue;
@@ -1092,7 +1117,7 @@
         }
       }
 
-      const gone = this.ball.y > H + 80 || this.ball.x < -80 || this.ball.x > W + 80 || this.ballAge > 5;
+      const gone = this.ball.y > H + 200 || this.ball.x < -80 || this.ball.x > W + 80 || this.ballAge > 8;
       if (gone) this.resetBall(260);
     }
 
@@ -1123,6 +1148,17 @@
 
       // a puff so the hit registers even though there is no sound yet
       this.sparkles.explode(6, this.ball.x, this.ball.y);
+    }
+
+    // a small ring of dust where the ball meets the ground
+    dustPuff(x, y) {
+      const ring = this.add.circle(x, y, 10)
+        .setStrokeStyle(4, 0xfff8e7, 0.9)
+        .setDepth(31);
+      this.tweens.add({
+        targets: ring, scale: 2.4, alpha: 0, duration: 380,
+        onComplete: () => ring.destroy()
+      });
     }
 
     resetBall(delay) {
